@@ -12,21 +12,17 @@
 </script>
 
 {#if content.status === 'idle' || content.status === 'loading'}
-	<StateMessage kind="loading" title="Loading topics…" />
+	<StateMessage kind="loading" title="loading topics…" />
 {:else if content.status === 'error'}
-	<StateMessage kind="error" title="Couldn't load your topics">
+	<StateMessage kind="error" title="couldn't load topics">
 		<p>{content.error}</p>
-		<button type="button" class="mt-3 btn-primary" onclick={() => content.reload()}
-			>Try again</button
-		>
+		<button type="button" class="mt-2 btn" onclick={() => content.reload()}>retry</button>
 	</StateMessage>
 {:else if content.topics.length === 0}
-	<StateMessage kind="empty" title="No topics yet">
+	<StateMessage kind="empty" title="no topics yet">
 		<p>
 			Add entries to <code>topics.json</code> in your content repo, then reload it from
-			<a class="text-indigo-600 underline dark:text-indigo-400" href={resolve('/settings')}
-				>Settings</a
-			>.
+			<a class="link" href={resolve('/settings')}>Settings</a>.
 		</p>
 	</StateMessage>
 {:else}

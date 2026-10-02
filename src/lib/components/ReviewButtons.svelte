@@ -41,9 +41,9 @@
 	}
 
 	const styles: Record<Rating, string> = {
-		hard: 'border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950',
-		ok: 'border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950',
-		easy: 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950'
+		hard: 'hover:border-danger hover:text-danger',
+		ok: 'hover:border-link hover:text-link',
+		easy: 'hover:border-ok hover:text-ok'
 	};
 </script>
 
@@ -57,32 +57,29 @@
 <div>
 	{#if open}
 		<div bind:this={group} role="group" aria-labelledby="review-question">
-			<p id="review-question" class="mb-2 text-sm font-medium">How did it go?</p>
-			<div class="grid grid-cols-3 gap-2">
+			<p id="review-question" class="mb-1.5 text-xs text-muted">how did it go?</p>
+			<div class="grid grid-cols-3 gap-1.5">
 				{#each RATINGS as rating (rating)}
+					{@const days = intervalFor(progress.intervalStep, rating)}
 					<button
 						type="button"
-						class="btn flex-col gap-0 border {styles[rating]}"
+						class="btn {styles[rating]}"
+						aria-label="{RATING_LABELS[rating]}, next review {describe(rating)}"
 						onclick={() => choose(rating)}
 					>
-						<span>{RATING_LABELS[rating]}</span>
-						<span class="text-xs font-normal opacity-80">{describe(rating)}</span>
+						{rating} <span class="text-muted">+{days}d</span>
 					</button>
 				{/each}
 			</div>
-			<button
-				type="button"
-				class="mt-2 text-sm text-slate-500 underline-offset-2 hover:underline"
-				onclick={close}
-			>
-				Cancel
+			<button type="button" class="mt-1.5 text-xs text-muted hover:text-fg" onclick={close}>
+				cancel (esc)
 			</button>
 		</div>
 	{:else}
 		<button
 			bind:this={trigger}
 			type="button"
-			class="btn-primary w-full sm:w-auto"
+			class="btn-primary w-full"
 			onclick={() => {
 				confirmation = '';
 				open = true;
@@ -92,7 +89,5 @@
 		</button>
 	{/if}
 	<!-- aria-live announces the confirmation to screen-reader users. -->
-	<p class="mt-2 min-h-5 text-sm text-emerald-700 dark:text-emerald-400" aria-live="polite">
-		{confirmation}
-	</p>
+	<p class="mt-1.5 min-h-4 text-xs text-ok" aria-live="polite">{confirmation}</p>
 </div>

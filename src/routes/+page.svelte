@@ -5,10 +5,10 @@
 	import { todayISO } from '#lib/utils/dates.ts';
 	import { countStatuses, dueTopics, reviewStreak, reviewsThisWeek } from '#lib/utils/stats.ts';
 	import { groupByCategory } from '#lib/utils/filter.ts';
-	import { plural } from '#lib/utils/labels.ts';
 	import ContentGate from '#lib/components/ContentGate.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import PriorityBadge from '#lib/components/PriorityBadge.svelte';
+	import StatusBadge from '#lib/components/StatusBadge.svelte';
 
 	const today = todayISO();
 
@@ -23,71 +23,58 @@
 		}))
 	);
 	const stats = $derived([
-		{ label: 'Topics', value: content.topics.length },
-		{ label: 'Due today', value: due.length },
-		{ label: 'Reviews this week', value: reviewsThisWeek(progress.map, today) },
-		{ label: 'Day streak', value: reviewStreak(progress.map, today) }
+		{ label: 'topics', value: content.topics.length },
+		{ label: 'due', value: due.length },
+		{ label: 'reviews (7d)', value: reviewsThisWeek(progress.map, today) },
+		{ label: 'streak', value: `${reviewStreak(progress.map, today)}d` }
 	]);
 </script>
 
 <svelte:head><title>Dashboard · Knowledge Tracker</title></svelte:head>
 
-<h1 class="mb-4 text-2xl font-bold">Dashboard</h1>
+<h1 class="sr-only">Dashboard</h1>
 
 <ContentGate>
-	<div class="space-y-8">
+	<div class="space-y-6">
 		<section aria-labelledby="stats-heading">
 			<h2 id="stats-heading" class="sr-only">Quick stats</h2>
-			<dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+			<!-- gap-px over a line-coloured background draws 1px dividers between cells. -->
+			<dl class="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
 				{#each stats as stat (stat.label)}
-					<div class="card">
-						<dt class="text-xs text-slate-500 dark:text-slate-400">{stat.label}</dt>
-						<dd class="text-2xl font-bold tabular-nums">{stat.value}</dd>
+					<div class="bg-bg px-3 py-2">
+						<dt class="text-xs text-muted">{stat.label}</dt>
+						<dd class="text-lg font-semibold tabular-nums">{stat.value}</dd>
 					</div>
 				{/each}
 			</dl>
 		</section>
 
-		<section aria-labelledby="due-heading">
-			<h2 id="due-heading" class="mb-3 text-lg font-semibold">Due for review</h2>
+		<section aria-labelledby="due-heading" class="box">
+			<h2 id="due-heading" class="box-head">
+				due for review <span class="text-fg">({due.length})</span>
+			</h2>
 			{#if due.length === 0}
-				<div class="card text-sm text-slate-600 dark:text-slate-400">
-					<p>Nothing due today. 🎉</p>
-					<p class="mt-1">
-						Open any <a
-							class="text-indigo-600 underline dark:text-indigo-400"
-							href={resolve('/topics')}>topic</a
-						>
-						and press <strong>Mark reviewed</strong> to start scheduling it.
-					</p>
-				</div>
+				<p class="px-3 py-3 text-xs text-muted">
+					nothing due today. Open a <a class="link" href={resolve('/topics')}>topic</a> and hit "Mark
+					reviewed" to start scheduling it.
+				</p>
 			{:else}
-				<ul class="space-y-2">
+				<ul class="divide-y divide-line">
 					{#each due as item (item.topic.id)}
 						{@const overdue = item.daysOverdue > 0}
 						<li>
 							<a
 								href={resolve('/topics/[id]', { id: item.topic.id })}
-								class="flex items-center justify-between gap-3 card hover:border-indigo-300 dark:hover:border-indigo-700 {overdue
-									? 'border-l-4 border-l-red-500 dark:border-l-red-500'
-									: ''}"
+								class="flex items-baseline gap-3 px-3 py-2 hover:bg-panel"
 							>
-								<span class="min-w-0">
-									<span class="block truncate font-medium">{item.topic.title}</span>
-									<span class="text-xs text-slate-500 dark:text-slate-400"
-										>{item.topic.category}</span
-									>
+								<span class="w-20 shrink-0 text-xs {overdue ? 'text-danger' : 'text-warn'}">
+									{overdue ? `-${item.daysOverdue}d` : 'today'}
 								</span>
-								<span class="flex shrink-0 flex-col items-end gap-1">
-									<PriorityBadge priority={item.topic.priority} />
-									<span
-										class="text-xs font-medium {overdue
-											? 'text-red-600 dark:text-red-400'
-											: 'text-slate-600 dark:text-slate-400'}"
-									>
-										{overdue ? `Overdue by ${plural(item.daysOverdue, 'day')}` : 'Due today'}
-									</span>
+								<span class="min-w-0 flex-1 truncate font-sans font-medium text-link">
+									{item.topic.title}
 								</span>
+								<span class="hidden text-xs text-muted sm:inline">{item.topic.category}</span>
+								<PriorityBadge priority={item.topic.priority} />
 							</a>
 						</li>
 					{/each}
@@ -95,22 +82,37 @@
 			{/if}
 		</section>
 
-		<section aria-labelledby="progress-heading" class="space-y-5 card">
-			<h2 id="progress-heading" class="text-lg font-semibold">Progress</h2>
-			<ProgressBar counts={overall} label="Overall" />
-			<hr class="border-slate-200 dark:border-slate-800" />
-			<ul class="space-y-4">
-				{#each categories as { category, counts } (category)}
-					<li>
-						<a
-							href={resolve(`/topics?category=${encodeURIComponent(category)}`)}
-							class="-m-2 block rounded-lg p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-						>
-							<ProgressBar {counts} label={category} />
-						</a>
-					</li>
-				{/each}
-			</ul>
+		<section aria-labelledby="progress-heading" class="box">
+			<h2 id="progress-heading" class="flex justify-between gap-2 box-head">
+				<span>progress</span>
+				<span aria-hidden="true"
+					><span class="text-ok">confident</span>/<span class="text-warn">learning</span
+					>/total</span
+				>
+			</h2>
+			<div class="space-y-2 px-3 py-3">
+				<ProgressBar counts={overall} label="all" />
+				<div class="flex flex-wrap gap-x-3 pb-1 text-xs text-muted">
+					<StatusBadge status="confident" />
+					{overall.confident}
+					<StatusBadge status="learning" />
+					{overall.learning}
+					<StatusBadge status="not-started" />
+					{overall['not-started']}
+				</div>
+				<ul class="space-y-0.5 border-t border-line pt-2">
+					{#each categories as { category, counts } (category)}
+						<li>
+							<a
+								href={resolve(`/topics?category=${encodeURIComponent(category)}`)}
+								class="-mx-1.5 block px-1.5 py-1 hover:bg-panel"
+							>
+								<ProgressBar {counts} label={category} />
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</div>
 		</section>
 	</div>
 </ContentGate>

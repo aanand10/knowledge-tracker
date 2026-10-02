@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { STATUSES, type Status } from '#lib/types/index.ts';
-	import { STATUS_LABELS } from '#lib/utils/labels.ts';
 
 	interface Props {
 		value: Status;
@@ -12,10 +11,10 @@
 </script>
 
 <fieldset>
-	<legend class="label">Status</legend>
-	<div class="grid grid-cols-3 gap-1.5">
+	<legend class="label">status</legend>
+	<div class="grid grid-cols-3">
 		{#each STATUSES as status (status)}
-			<label>
+			<label class="-ml-px first:ml-0">
 				<input
 					type="radio"
 					name="status-{id}"
@@ -25,9 +24,9 @@
 					class="peer sr-only"
 				/>
 				<span
-					class="flex min-h-10 cursor-pointer items-center justify-center rounded-lg border border-slate-300 px-2 text-center text-sm font-medium peer-checked:border-indigo-600 peer-checked:bg-indigo-600 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-indigo-500 dark:border-slate-700"
+					class="flex h-8 cursor-pointer items-center justify-center border border-line px-1 text-xs whitespace-nowrap text-muted peer-checked:relative peer-checked:z-10 peer-checked:border-fg peer-checked:bg-fg peer-checked:text-bg peer-focus-visible:relative peer-focus-visible:z-20 peer-focus-visible:outline-2 peer-focus-visible:outline-link hover:text-fg"
 				>
-					{STATUS_LABELS[status]}
+					{status}
 				</span>
 			</label>
 		{/each}

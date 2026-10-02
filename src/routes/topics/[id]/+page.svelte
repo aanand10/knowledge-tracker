@@ -71,36 +71,27 @@
 
 <ContentGate>
 	{#if !topic}
-		<StateMessage kind="empty" title="Topic not found">
-			<p>
-				No topic with id <code>{id}</code>.
-				<a class="text-indigo-600 underline dark:text-indigo-400" href={resolve('/topics')}
-					>See all topics</a
-				>
-			</p>
+		<StateMessage kind="empty" title="topic not found: {id}">
+			<a class="link" href={resolve('/topics')}>← all topics</a>
 		</StateMessage>
 	{:else}
-		<nav aria-label="Breadcrumb" class="mb-3 text-sm text-slate-500 dark:text-slate-400">
-			<a class="hover:underline" href={resolve('/topics')}>Topics</a>
-			<span aria-hidden="true"> / </span>
-			<a
-				class="hover:underline"
-				href={resolve(`/topics?category=${encodeURIComponent(topic.category)}`)}
-			>
+		<nav aria-label="Breadcrumb" class="mb-2 text-xs text-muted">
+			<a class="link" href={resolve('/topics')}>topics</a>
+			<span aria-hidden="true">/</span>
+			<a class="link" href={resolve(`/topics?category=${encodeURIComponent(topic.category)}`)}>
 				{topic.category}
 			</a>
+			<span aria-hidden="true">/</span>
+			<span>{topic.id}</span>
 		</nav>
 
-		<header class="mb-6">
-			<h1 class="text-2xl font-bold text-balance sm:text-3xl">{topic.title}</h1>
-			<div class="mt-2 flex flex-wrap items-center gap-1.5">
+		<header class="mb-5 border-b border-line pb-3">
+			<h1 class="font-sans text-2xl font-semibold text-balance">{topic.title}</h1>
+			<div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted">
 				<StatusBadge status={topicProgress.status} />
-				<PriorityBadge priority={topic.priority} />
+				<span>priority:<PriorityBadge priority={topic.priority} /></span>
 				{#each topic.tags as tag (tag)}
-					<a
-						href={resolve(`/topics?tag=${encodeURIComponent(tag)}`)}
-						class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-					>
+					<a href={resolve(`/topics?tag=${encodeURIComponent(tag)}`)} class="hover:text-link">
 						#{tag}
 					</a>
 				{/each}
@@ -109,76 +100,61 @@
 
 		<!-- On wide screens: note on the left, your progress on the right. -->
 		<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-			<!-- {#key} recreates the editor panel per topic, resetting local UI state like the open review menu. -->
+			<!-- {#key} recreates the panel per topic, resetting local UI state like the open review menu. -->
 			{#key topic.id}
-				<aside class="space-y-5 lg:order-last" aria-label="Your progress">
-					<section class="space-y-4 card">
-						<h2 class="font-semibold">Review</h2>
-						<dl class="grid grid-cols-2 gap-2 text-sm">
-							<div>
-								<dt class="text-slate-500 dark:text-slate-400">Next review</dt>
-								<dd class="font-medium">
+				<aside class="space-y-4 lg:order-last" aria-label="Your progress">
+					<section class="box">
+						<h2 class="box-head">review</h2>
+						<div class="space-y-3 p-3">
+							<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+								<dt class="text-muted">next</dt>
+								<dd>
 									{topicProgress.nextReview
-										? relativeDay(topicProgress.nextReview, today)
-										: 'Not scheduled'}
+										? `${topicProgress.nextReview} (${relativeDay(topicProgress.nextReview, today)})`
+										: '-'}
 								</dd>
-							</div>
-							<div>
-								<dt class="text-slate-500 dark:text-slate-400">Reviews</dt>
-								<dd class="font-medium">{topicProgress.reviewCount}</dd>
-							</div>
-							<div class="col-span-2">
-								<dt class="text-slate-500 dark:text-slate-400">Last reviewed</dt>
-								<dd class="font-medium">
-									{topicProgress.lastReviewed
-										? relativeDay(topicProgress.lastReviewed, today)
-										: 'Never'}
-								</dd>
-							</div>
-						</dl>
-						<ReviewButtons progress={topicProgress} onreview={review} />
+								<dt class="text-muted">last</dt>
+								<dd>{topicProgress.lastReviewed ?? 'never'}</dd>
+								<dt class="text-muted">count</dt>
+								<dd>{topicProgress.reviewCount}</dd>
+							</dl>
+							<ReviewButtons progress={topicProgress} onreview={review} />
+						</div>
 					</section>
 
-					<section class="space-y-4 card">
-						<h2 class="font-semibold">Progress</h2>
-						<StatusPicker
-							value={topicProgress.status}
-							onchange={(status) => progress.update(id, { status })}
-						/>
-						<ConfidenceInput
-							value={topicProgress.confidence}
-							onchange={(confidence) => progress.update(id, { confidence })}
-						/>
-						<div>
-							<label for="quick-notes" class="label">Quick notes</label>
-							<textarea
-								id="quick-notes"
-								class="input min-h-24 resize-y"
-								maxlength="2000"
-								placeholder="Things to remember, mistakes you made…"
-								value={topicProgress.quickNotes}
-								oninput={(e) => progress.update(id, { quickNotes: e.currentTarget.value })}
-							></textarea>
-							<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-								Saved automatically on this device.
-							</p>
+					<section class="box">
+						<h2 class="box-head">progress</h2>
+						<div class="space-y-3 p-3">
+							<StatusPicker
+								value={topicProgress.status}
+								onchange={(status) => progress.update(id, { status })}
+							/>
+							<ConfidenceInput
+								value={topicProgress.confidence}
+								onchange={(confidence) => progress.update(id, { confidence })}
+							/>
+							<div>
+								<label for="quick-notes" class="label">quick notes (saved locally)</label>
+								<textarea
+									id="quick-notes"
+									class="input min-h-20 resize-y"
+									maxlength="2000"
+									placeholder="things to remember…"
+									value={topicProgress.quickNotes}
+									oninput={(e) => progress.update(id, { quickNotes: e.currentTarget.value })}
+								></textarea>
+							</div>
 						</div>
 					</section>
 
 					{#if topic.resources.length > 0}
-						<section class="card">
-							<h2 class="mb-2 font-semibold">Resources</h2>
-							<ul class="space-y-1.5 text-sm">
+						<section class="box">
+							<h2 class="box-head">resources</h2>
+							<ul class="space-y-1 p-3 text-xs">
 								{#each topic.resources as resource (resource.url)}
 									<li>
-										<a
-											href={resource.url}
-											target="_blank"
-											rel="noopener noreferrer"
-											class="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
-										>
-											{resource.label}
-											<span class="sr-only">(opens in a new tab)</span>
+										<a href={resource.url} target="_blank" rel="noopener noreferrer" class="link">
+											{resource.label}<span class="sr-only"> (opens in a new tab)</span>
 											<span aria-hidden="true">↗</span>
 										</a>
 									</li>
@@ -191,13 +167,13 @@
 
 			<div class="min-w-0">
 				{#if note.kind === 'loading'}
-					<StateMessage kind="loading" title="Loading note…" />
+					<StateMessage kind="loading" title="loading note…" />
 				{:else if note.kind === 'error'}
-					<StateMessage kind="error" title="Couldn't load the note">
+					<StateMessage kind="error" title="couldn't load the note">
 						<p>{note.message}</p>
 					</StateMessage>
 				{:else if note.kind === 'none'}
-					<StateMessage kind="empty" title="No note for this topic yet">
+					<StateMessage kind="empty" title="no note for this topic yet">
 						<p>Add a <code>note</code> path to this topic in <code>topics.json</code>.</p>
 					</StateMessage>
 				{:else}
@@ -208,27 +184,16 @@
 
 		<nav
 			aria-label="Topics in {topic.category}"
-			class="mt-10 grid grid-cols-2 gap-3 border-t border-slate-200 pt-6 dark:border-slate-800"
+			class="mt-10 flex justify-between gap-3 border-t border-line pt-3 text-xs"
 		>
 			{#if prev}
-				<a
-					href={resolve('/topics/[id]', { id: prev.id })}
-					class="card hover:border-indigo-300 dark:hover:border-indigo-700"
-				>
-					<span class="block text-xs text-slate-500 dark:text-slate-400">← Previous</span>
-					<span class="font-medium">{prev.title}</span>
-				</a>
+				<a href={resolve('/topics/[id]', { id: prev.id })} class="link">← {prev.title}</a>
 			{:else}
 				<span></span>
 			{/if}
 			{#if next}
-				<a
-					href={resolve('/topics/[id]', { id: next.id })}
-					class="card text-right hover:border-indigo-300 dark:hover:border-indigo-700"
+				<a href={resolve('/topics/[id]', { id: next.id })} class="text-right link">{next.title} →</a
 				>
-					<span class="block text-xs text-slate-500 dark:text-slate-400">Next →</span>
-					<span class="font-medium">{next.title}</span>
-				</a>
 			{/if}
 		</nav>
 	{/if}

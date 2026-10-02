@@ -12,8 +12,8 @@ describe('ReviewButtons', () => {
 
 		await user.click(screen.getByRole('button', { name: 'Mark reviewed' }));
 		const ok = screen.getByRole('button', { name: /OK/ });
-		expect(ok).toHaveTextContent('tomorrow');
-		expect(screen.getByRole('button', { name: /Easy/ })).toHaveTextContent('in 3 days');
+		expect(ok).toHaveTextContent('+1d');
+		expect(screen.getByRole('button', { name: /Easy/ })).toHaveTextContent('+3d');
 
 		await user.click(ok);
 		expect(onreview).toHaveBeenCalledWith('ok');

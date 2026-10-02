@@ -12,10 +12,10 @@ export const SORT_KEYS = ['priority', 'next-review', 'confidence', 'title'] as c
 export type SortKey = (typeof SORT_KEYS)[number];
 
 export const SORT_LABELS: Record<SortKey, string> = {
-	priority: 'Priority',
-	'next-review': 'Next review',
-	confidence: 'Confidence (lowest first)',
-	title: 'Title'
+	priority: 'priority',
+	'next-review': 'next review',
+	confidence: 'confidence (low first)',
+	title: 'title'
 };
 
 export interface TopicFilters {

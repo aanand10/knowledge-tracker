@@ -24,3 +24,18 @@ export function githubContentBaseUrl(config = contentConfig): string | null {
 	if (!user || !repo) return null;
 	return `https://raw.githubusercontent.com/${encodeURIComponent(user)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/`;
 }
+
+/**
+ * Visitor counting with GoatCounter (https://www.goatcounter.com): free for
+ * personal sites, no cookies, bots filtered out.
+ *
+ * 1. Sign up and pick a site code, e.g. "aanand10-kt" → https://aanand10-kt.goatcounter.com
+ * 2. Put that code below.
+ * 3. To show the public "N visitors" counter in the footer, enable
+ *    Settings → "Allow adding visitor counts on your website" in GoatCounter.
+ *
+ * Leave it empty to disable analytics completely (nothing is loaded).
+ */
+export const analyticsConfig = {
+	goatcounterCode: ''
+};

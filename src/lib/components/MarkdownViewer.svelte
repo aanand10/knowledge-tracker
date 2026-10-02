@@ -41,21 +41,19 @@
 </script>
 
 {#if renderError}
-	<p role="alert" class="text-red-600 dark:text-red-400">
+	<p role="alert" class="text-xs text-danger">
 		Couldn't render this note: {renderError}
 	</p>
 {:else if rendered}
-	<div class="space-y-6">
+	<div class="space-y-5">
 		{#if rendered.toc.length >= 2}
 			<TableOfContents items={rendered.toc} />
 		{/if}
-		<article
-			class="prose max-w-none prose-slate dark:prose-invert prose-headings:scroll-mt-20 prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-code:before:content-none prose-code:after:content-none prose-pre:border prose-pre:border-slate-200 prose-pre:bg-slate-50 prose-pre:text-slate-800 dark:prose-pre:border-slate-800 dark:prose-pre:bg-slate-900 dark:prose-pre:text-slate-200 prose-table:block prose-table:overflow-x-auto"
-		>
+		<article class="note prose prose-sm max-w-none font-sans sm:prose-base">
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -- HTML is sanitized with DOMPurify in renderMarkdown -->
 			{@html rendered.html}
 		</article>
 	</div>
 {:else}
-	<p class="text-slate-500" role="status">Rendering note…</p>
+	<p class="text-xs text-muted" role="status">rendering…</p>
 {/if}

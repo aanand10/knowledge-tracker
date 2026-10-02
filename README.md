@@ -84,6 +84,24 @@ Validation rules (an invalid entry is skipped, and you get a warning banner inst
 | `note`      | Optional relative path to a `.md` file (no `..`, no absolute URLs).              |
 | `resources` | Optional array of `{ label, url }` with `http(s)` URLs.                          |
 
+## Visitor counter (optional)
+
+The footer can show a public "N visitors" count using [GoatCounter](https://www.goatcounter.com).
+It's free for personal sites, sets no cookies (so no consent banner is needed), and filters out bots.
+
+1. Sign up at goatcounter.com and choose a site code, e.g. `aanand10-kt`.
+2. Set `analyticsConfig.goatcounterCode` in [`src/lib/config.ts`](src/lib/config.ts).
+3. In GoatCounter, open **Settings** and enable **"Allow adding visitor counts on your website"**.
+4. Push. The full dashboard is at `https://<code>.goatcounter.com`.
+
+Details:
+
+- Each page view sends only the path (e.g. `/topics/js-closures`), never search params or your progress.
+- Visits from `localhost` are never counted.
+- "Visitors" means unique visitors as GoatCounter estimates them, without cookies, so treat it as approximate.
+- Ad blockers may block the script. Those visits aren't counted and the app keeps working.
+- With the code left empty, no analytics script loads at all.
+
 ## Deploy to GitHub Pages
 
 1. Push this project to its own GitHub repo (e.g. `knowledge-tracker`).

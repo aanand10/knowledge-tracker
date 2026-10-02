@@ -7,7 +7,6 @@
 		hasActiveFilters,
 		type TopicFilters
 	} from '#lib/utils/filter.ts';
-	import { PRIORITY_LABELS, STATUS_LABELS } from '#lib/utils/labels.ts';
 
 	interface Props {
 		filters: TopicFilters;
@@ -33,30 +32,30 @@
 	const active = $derived(hasActiveFilters(filters));
 </script>
 
-<search class="space-y-3 card" aria-label="Filter topics">
+<search class="space-y-2" aria-label="Filter topics">
 	<div>
-		<label for="topic-search" class="label">Search</label>
+		<label for="topic-search" class="label">search</label>
 		<input
 			id="topic-search"
 			type="search"
 			class="input"
-			placeholder="Title or tag…"
+			placeholder="filter by title or #tag"
 			autocomplete="off"
 			value={filters.q}
 			oninput={(e) => onSearchInput(e.currentTarget.value)}
 		/>
 	</div>
 
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+	<div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
 		<div>
-			<label for="filter-category" class="label">Category</label>
+			<label for="filter-category" class="label">category</label>
 			<select
 				id="filter-category"
 				class="input"
 				value={filters.category}
 				onchange={(e) => update({ category: e.currentTarget.value })}
 			>
-				<option value="">All</option>
+				<option value="">all</option>
 				{#each categories as category (category)}
 					<option value={category}>{category}</option>
 				{/each}
@@ -64,44 +63,44 @@
 		</div>
 
 		<div>
-			<label for="filter-status" class="label">Status</label>
+			<label for="filter-status" class="label">status</label>
 			<select
 				id="filter-status"
 				class="input"
 				value={filters.status}
 				onchange={(e) => update({ status: e.currentTarget.value as TopicFilters['status'] })}
 			>
-				<option value="">All</option>
+				<option value="">all</option>
 				{#each STATUSES as status (status)}
-					<option value={status}>{STATUS_LABELS[status]}</option>
+					<option value={status}>{status}</option>
 				{/each}
 			</select>
 		</div>
 
 		<div>
-			<label for="filter-priority" class="label">Priority</label>
+			<label for="filter-priority" class="label">priority</label>
 			<select
 				id="filter-priority"
 				class="input"
 				value={filters.priority}
 				onchange={(e) => update({ priority: e.currentTarget.value as TopicFilters['priority'] })}
 			>
-				<option value="">All</option>
+				<option value="">all</option>
 				{#each PRIORITIES as priority (priority)}
-					<option value={priority}>{PRIORITY_LABELS[priority]}</option>
+					<option value={priority}>{priority}</option>
 				{/each}
 			</select>
 		</div>
 
 		<div>
-			<label for="filter-tag" class="label">Tag</label>
+			<label for="filter-tag" class="label">tag</label>
 			<select
 				id="filter-tag"
 				class="input"
 				value={filters.tag}
 				onchange={(e) => update({ tag: e.currentTarget.value })}
 			>
-				<option value="">All</option>
+				<option value="">all</option>
 				{#each tags as tag (tag)}
 					<option value={tag}>#{tag}</option>
 				{/each}
@@ -109,7 +108,7 @@
 		</div>
 
 		<div class="col-span-2 sm:col-span-1">
-			<label for="filter-sort" class="label">Sort by</label>
+			<label for="filter-sort" class="label">sort</label>
 			<select
 				id="filter-sort"
 				class="input"
@@ -126,13 +125,13 @@
 	{#if active}
 		<button
 			type="button"
-			class="btn-secondary"
+			class="btn"
 			onclick={() => {
 				clearTimeout(searchTimer);
 				onchange({ ...DEFAULT_FILTERS, sort: filters.sort });
 			}}
 		>
-			Clear filters
+			clear filters
 		</button>
 	{/if}
 </search>

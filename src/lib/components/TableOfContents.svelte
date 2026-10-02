@@ -4,19 +4,14 @@
 	let { items }: { items: TocItem[] } = $props();
 </script>
 
-<nav aria-label="Table of contents" class="card text-sm">
+<nav aria-label="Table of contents" class="border-l-2 border-line pl-3 text-xs">
 	<!-- <details> gives a collapsible TOC with zero JavaScript and full keyboard support. -->
 	<details open>
-		<summary class="cursor-pointer font-semibold select-none">On this page</summary>
-		<ol class="mt-2 space-y-1">
+		<summary class="cursor-pointer text-muted select-none">contents</summary>
+		<ol class="mt-1.5 space-y-1">
 			{#each items as item (item.id)}
-				<li class={item.depth === 3 ? 'pl-4' : ''}>
-					<a
-						href="#{item.id}"
-						class="text-slate-600 underline-offset-2 hover:text-indigo-600 hover:underline dark:text-slate-400 dark:hover:text-indigo-400"
-					>
-						{item.text}
-					</a>
+				<li class={item.depth === 3 ? 'pl-3' : ''}>
+					<a href="#{item.id}" class="link">{item.text}</a>
 				</li>
 			{/each}
 		</ol>

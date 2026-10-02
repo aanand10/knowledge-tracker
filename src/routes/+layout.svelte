@@ -1,12 +1,15 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { asset, resolve } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { content } from '#lib/stores/content.svelte.ts';
 	import { theme } from '#lib/stores/theme.svelte.ts';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
+	import VisitorCount from '#lib/components/VisitorCount.svelte';
+	import { trackPageView } from '#lib/utils/analytics.ts';
 
 	// `children` is the current page. Layouts render it with {@render children()}.
 	let { children } = $props();
@@ -17,6 +20,12 @@
 		content.load();
 	});
 
+	// Runs after the first page load AND after every client-side navigation,
+	// so each page view is counted once. A no-op unless analytics is configured.
+	afterNavigate(({ to }) => {
+		if (to) trackPageView(to.url.pathname);
+	});
+
 	// Keep the `dark` class on <html> in sync with the theme store.
 	$effect(() => {
 		document.documentElement.classList.toggle('dark', theme.isDark);
@@ -25,9 +34,9 @@
 	// Match on the route id (e.g. "/topics/[id]") rather than the URL, so it works
 	// regardless of the GitHub Pages base path.
 	const links = [
-		{ href: resolve('/'), label: 'Dashboard', section: '/' },
-		{ href: resolve('/topics'), label: 'Topics', section: '/topics' },
-		{ href: resolve('/settings'), label: 'Settings', section: '/settings' }
+		{ href: resolve('/'), label: 'dashboard', section: '/' },
+		{ href: resolve('/topics'), label: 'topics', section: '/topics' },
+		{ href: resolve('/settings'), label: 'settings', section: '/settings' }
 	];
 
 	function isCurrent(section: string): boolean {
@@ -38,30 +47,25 @@
 
 <a
 	href="#main"
-	class="sr-only z-50 rounded-lg bg-indigo-600 px-3 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+	class="sr-only z-50 bg-fg px-2 py-1 text-bg focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
 >
-	Skip to content
+	skip to content
 </a>
 
-<header
-	class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90"
->
-	<div class="mx-auto flex max-w-4xl items-center gap-2 px-4 py-2">
-		<a href={resolve('/')} class="mr-auto flex items-center gap-2 font-semibold">
-			<img src={asset('favicon.svg')} alt="" class="size-7" />
-			<span class="hidden sm:inline">Knowledge Tracker</span>
-		</a>
+<header class="sticky top-0 z-40 border-b border-line bg-bg">
+	<div class="mx-auto flex h-11 max-w-5xl items-center gap-4 px-4">
+		<a href={resolve('/')} class="mr-auto font-semibold whitespace-nowrap"> knowledge-tracker </a>
 		<nav aria-label="Main">
-			<ul class="flex gap-1">
+			<ul class="flex gap-3 sm:gap-4">
 				{#each links as link (link.href)}
 					{@const current = isCurrent(link.section)}
 					<li>
 						<a
 							href={link.href}
 							aria-current={current ? 'page' : undefined}
-							class="block rounded-lg px-2.5 py-2 text-sm font-medium {current
-								? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
-								: 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}"
+							class="text-xs {current
+								? 'text-fg underline decoration-2 underline-offset-[14px]'
+								: 'text-muted hover:text-fg'}"
 						>
 							{link.label}
 						</a>
@@ -73,7 +77,14 @@
 	</div>
 </header>
 
-<main id="main" class="mx-auto max-w-4xl px-4 py-6 pb-16" tabindex="-1">
+<main id="main" class="mx-auto max-w-5xl px-4 py-5 pb-16" tabindex="-1">
 	<ContentWarnings />
 	{@render children()}
 </main>
+
+<footer
+	class="mx-auto flex max-w-5xl justify-between gap-3 border-t border-line px-4 py-3 text-xs text-muted"
+>
+	<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">source</a>
+	<VisitorCount />
+</footer>

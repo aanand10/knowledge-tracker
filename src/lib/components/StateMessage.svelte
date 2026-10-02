@@ -13,17 +13,13 @@
 
 <!-- role="alert" interrupts screen readers (errors); role="status" is polite. -->
 <div
-	class="flex flex-col items-center gap-2 card py-10 text-center"
+	class="box px-3 py-4 text-xs {kind === 'error' ? 'border-danger' : ''}"
 	role={kind === 'error' ? 'alert' : 'status'}
 >
-	{#if kind === 'loading'}
-		<span
-			class="size-6 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600 motion-reduce:animate-none"
-			aria-hidden="true"
-		></span>
-	{/if}
-	<p class="font-medium {kind === 'error' ? 'text-red-700 dark:text-red-400' : ''}">{title}</p>
+	<p class={kind === 'error' ? 'text-danger' : 'text-muted'}>
+		{kind === 'error' ? 'error: ' : ''}{title}
+	</p>
 	{#if children}
-		<div class="text-sm text-slate-600 dark:text-slate-400">{@render children()}</div>
+		<div class="mt-2 text-muted">{@render children()}</div>
 	{/if}
 </div>

@@ -44,29 +44,25 @@
 
 <svelte:head><title>Topics · Knowledge Tracker</title></svelte:head>
 
-<h1 class="mb-4 text-2xl font-bold">Topics</h1>
+<h1 class="sr-only">Topics</h1>
 
 <ContentGate>
-	<div class="space-y-6">
+	<div class="space-y-4">
 		<FilterBar {filters} {categories} {tags} onchange={applyFilters} />
 
-		<p class="text-sm text-slate-600 dark:text-slate-400" aria-live="polite">
-			Showing {visible.length} of {plural(content.topics.length, 'topic')}
+		<p class="text-xs text-muted" aria-live="polite">
+			{visible.length}/{plural(content.topics.length, 'topic')}
 		</p>
 
 		{#if visible.length === 0}
-			<StateMessage kind="empty" title="No topics match these filters." />
+			<StateMessage kind="empty" title="no topics match these filters" />
 		{:else}
 			{#each groups as group (group.category)}
-				<section aria-labelledby="cat-{slugify(group.category)}">
-					<h2
-						id="cat-{slugify(group.category)}"
-						class="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
-					>
-						{group.category}
-						<span class="font-normal">({group.topics.length})</span>
+				<section aria-labelledby="cat-{slugify(group.category)}" class="box">
+					<h2 id="cat-{slugify(group.category)}" class="box-head">
+						{group.category} <span>({group.topics.length})</span>
 					</h2>
-					<ul class="grid gap-3 sm:grid-cols-2">
+					<ul class="divide-y divide-line">
 						{#each group.topics as topic (topic.id)}
 							<li>
 								<TopicCard {topic} progress={progress.get(topic.id)} {today} />

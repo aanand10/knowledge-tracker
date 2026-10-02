@@ -21,11 +21,23 @@ function sampleBaseUrl(): string {
 	);
 }
 
+/** Give up on a request after this long, so a stalled connection falls back instead of hanging. */
+const REQUEST_TIMEOUT_MS = 8000;
+
 async function fetchText(url: string, signal: AbortSignal): Promise<string> {
-	// `no-cache` revalidates with GitHub so new notes show up after a push.
-	const response = await fetch(url, { signal, cache: 'no-cache' });
-	if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
-	return response.text();
+	// AbortSignal.any: abort if EITHER the caller cancels OR the timeout fires.
+	const combined = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
+	try {
+		// `no-cache` revalidates with GitHub so new notes show up after a push.
+		const response = await fetch(url, { signal: combined, cache: 'no-cache' });
+		if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+		return await response.text();
+	} catch (error) {
+		if (error instanceof DOMException && error.name === 'TimeoutError') {
+			throw new Error(`request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`, { cause: error });
+		}
+		throw error;
+	}
 }
 
 export function isAbort(error: unknown): boolean {

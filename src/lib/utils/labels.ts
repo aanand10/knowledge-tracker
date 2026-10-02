@@ -20,11 +20,11 @@ export const RATING_LABELS: Record<Rating, string> = {
 
 export const CONFIDENCE_LABELS = [
 	'',
-	'No idea',
-	'Shaky',
-	'Getting there',
-	'Solid',
-	'Could teach it'
+	'no idea',
+	'shaky',
+	'getting there',
+	'solid',
+	'could teach it'
 ];
 
 export function plural(count: number, word: string): string {
