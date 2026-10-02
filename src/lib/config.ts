@@ -37,5 +37,5 @@ export function githubContentBaseUrl(config = contentConfig): string | null {
  * Leave it empty to disable analytics completely (nothing is loaded).
  */
 export const analyticsConfig = {
-	goatcounterCode: ''
+	goatcounterCode: 'aanand10'
 };

@@ -1,9 +1,15 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { analyticsConfig } from '#lib/config.ts';
 import { fetchVisitorCount, trackPageView } from './analytics';
 
-afterEach(() => {
+const configuredCode = analyticsConfig.goatcounterCode;
+
+beforeEach(() => {
 	analyticsConfig.goatcounterCode = '';
+});
+
+afterEach(() => {
+	analyticsConfig.goatcounterCode = configuredCode;
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
