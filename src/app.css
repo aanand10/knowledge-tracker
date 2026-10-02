@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Dark mode is driven by a `dark` class on <html> (set by the theme store),
+   so the user can override the system preference with the toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+	body {
+		@apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+	}
+	/* One consistent, clearly visible focus ring for keyboard users. */
+	:focus-visible {
+		@apply outline-2 outline-offset-2 outline-indigo-500;
+	}
+	/* Offset in-page anchor jumps (TOC links) below the sticky header. */
+	[id] {
+		scroll-margin-top: 5rem;
+	}
+}
+
+/* Small reusable classes. `@utility` (Tailwind v4) makes them usable with
+   variants and inside other @apply rules. */
+@utility card {
+	@apply rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900;
+}
+@utility btn {
+	@apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+	@apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+}
+@utility btn-secondary {
+	@apply btn border border-slate-300 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800;
+}
+@utility btn-danger {
+	@apply btn bg-red-600 text-white hover:bg-red-700;
+}
+@utility input {
+	@apply min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 sm:text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
+}
+@utility label {
+	@apply mb-1 block text-xs font-medium tracking-wide text-slate-600 uppercase dark:text-slate-400;
+}
+
+/* highlight.js token colours that follow light/dark mode (GitHub-like palette). */
+.hljs-comment,
+.hljs-quote {
+	@apply text-slate-500 italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-built_in {
+	@apply text-rose-600 dark:text-rose-400;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-attr,
+.hljs-symbol {
+	@apply text-emerald-700 dark:text-emerald-400;
+}
+.hljs-number,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params {
+	@apply text-amber-700 dark:text-amber-300;
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-type {
+	@apply text-indigo-600 dark:text-indigo-300;
+}
+.hljs-meta,
+.hljs-tag {
+	@apply text-sky-700 dark:text-sky-300;
+}

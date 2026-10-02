@@ -1,0 +1,11 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+
+# Output
+/build
+/.svelte-kit
+
+# Content is data, not code
+/static/
+/content-template/

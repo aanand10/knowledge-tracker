@@ -1,0 +1,22 @@
+[
+  {
+    "id": "js-closures",
+    "title": "Closures",
+    "category": "JavaScript",
+    "priority": "high",
+    "tags": ["fundamentals"],
+    "note": "notes/javascript/closures.md",
+    "resources": [
+      { "label": "javascript.info", "url": "https://javascript.info/closure" }
+    ]
+  },
+  {
+    "id": "react-reconciliation",
+    "title": "Reconciliation & keys",
+    "category": "React",
+    "priority": "medium",
+    "tags": ["rendering"],
+    "note": "notes/react/reconciliation.md",
+    "resources": []
+  }
+]
