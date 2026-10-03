@@ -62,11 +62,11 @@
 		<a
 			href={resolve('/')}
 			class="mr-auto font-semibold whitespace-nowrap"
-			aria-label="knowledge-tracker home"
+			aria-label="Knowledge Tracker home"
 		>
 			<!-- Short name on phones so the nav never overflows. -->
-			<span class="sm:hidden" aria-hidden="true">kt</span>
-			<span class="hidden sm:inline">knowledge-tracker</span>
+			<span class="sm:hidden" aria-hidden="true">KT</span>
+			<span class="hidden sm:inline">Knowledge Tracker</span>
 		</a>
 		<nav aria-label="Main">
 			<ul class="flex gap-2.5 sm:gap-4">

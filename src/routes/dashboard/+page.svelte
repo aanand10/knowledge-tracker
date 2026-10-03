@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { cloud } from '#lib/stores/cloud.svelte.ts';
+	import { greeting } from '#lib/utils/greeting.ts';
 	import { resolve } from '$app/paths';
 	import { content } from '#lib/stores/content.svelte.ts';
 	import { progress } from '#lib/stores/progress.svelte.ts';
@@ -33,7 +35,14 @@
 
 <svelte:head><title>Dashboard · Knowledge Tracker</title></svelte:head>
 
-<h1 class="sr-only">Dashboard</h1>
+<header class="mb-4">
+	{#if cloud.firstName}
+		<p class="text-sm text-muted">{greeting()}, <span class="text-fg">{cloud.firstName}</span>.</p>
+	{/if}
+	<h1 class="font-sans text-xl font-semibold">
+		{cloud.firstName ? `${cloud.firstName}'s dashboard` : 'Dashboard'}
+	</h1>
+</header>
 
 <ContentGate>
 	<div class="space-y-6">

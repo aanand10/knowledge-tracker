@@ -19,7 +19,10 @@
 		uniqueTags,
 		type TopicFilters
 	} from '#lib/utils/filter.ts';
-	import { countStatuses } from '#lib/utils/stats.ts';
+	import { countStatuses, dueTopics } from '#lib/utils/stats.ts';
+	import { greeting } from '#lib/utils/greeting.ts';
+	import { plural } from '#lib/utils/labels.ts';
+	import { cloud } from '#lib/stores/cloud.svelte.ts';
 	import { todayISO } from '#lib/utils/dates.ts';
 	import { slugify } from '#lib/utils/slug.ts';
 	import ContentGate from '#lib/components/ContentGate.svelte';
@@ -44,6 +47,7 @@
 	);
 	const totals = $derived(countStatuses(content.topics, progress.map));
 	const today = todayISO();
+	const dueCount = $derived(dueTopics(content.topics, progress.map, today).length);
 
 	// In "area" mode each group also has category sub-sections, which collapse on their own.
 	const sections = $derived(
@@ -115,6 +119,12 @@
 	<div class="space-y-5">
 		<header class="flex flex-wrap items-end justify-between gap-2">
 			<div>
+				{#if cloud.firstName}
+					<!-- Personal touch once we know the user's name. -->
+					<p class="text-sm text-muted">
+						{greeting()}, <span class="text-fg">{cloud.firstName}</span>.
+					</p>
+				{/if}
 				<h1 class="font-sans text-xl font-semibold">Topics</h1>
 				<p class="text-xs text-muted">
 					{content.topics.length} topics ·
@@ -123,7 +133,9 @@
 					{totals['not-started']} to start
 				</p>
 			</div>
-			<a class="text-xs link" href={resolve('/dashboard')}>due for review →</a>
+			<a class="text-xs link" href={resolve('/dashboard')}>
+				{dueCount ? `${plural(dueCount, 'topic')} due today →` : 'due for review →'}
+			</a>
 		</header>
 
 		<FilterBar

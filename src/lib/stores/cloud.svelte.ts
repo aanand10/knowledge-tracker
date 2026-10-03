@@ -16,6 +16,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { isCloudConfigured, supabaseConfig } from '#lib/config.ts';
 import { defaultProgress, type ProgressMap, type TopicProgress } from '#lib/types/index.ts';
 import { mergeProgress, sameProgress } from '#lib/utils/merge.ts';
+import { personalName } from '#lib/utils/greeting.ts';
 import { sanitizeProgress } from '#lib/utils/validate.ts';
 import { STORAGE_KEYS, readString, removeKey, writeString } from './storage.ts';
 import { progress, type ProgressChange } from './progress.svelte.ts';
@@ -86,6 +87,8 @@ class CloudStore {
 	status = $state<SyncStatus>('off');
 	error = $state<string | null>(null);
 	busy = $state(false);
+	/** First name to personalise the UI with ('' if we only know the email). */
+	firstName = $derived(personalName(this.user?.name, this.user?.email));
 	/** Set after a magic link was sent, to show "check your email". */
 	linkSentTo = $state<string | null>(null);
 
