@@ -117,7 +117,7 @@ language sql stable security definer set search_path = public as $$
   order by rank
   limit least(greatest(max_rows, 1), 100);
 $$;
-revoke all on function public.get_leaderboard(int) from public;
+revoke all on function public.get_leaderboard(int) from public, anon;
 grant execute on function public.get_leaderboard(int) to authenticated;
 
 -- ── Realtime: push changes to the user's other open devices ────────────────

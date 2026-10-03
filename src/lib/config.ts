@@ -47,8 +47,8 @@ export const analyticsConfig = {
  * row level security (see supabase/schema.sql). Setup steps are in the README.
  */
 export const supabaseConfig = {
-	url: '',
-	anonKey: ''
+	url: 'https://jrvokofwolerpnqkghle.supabase.co',
+	anonKey: 'sb_publishable_wlJndk0l_w_Bz24Kblsmxw_V07IdNHg'
 };
 
 export const isCloudConfigured = (): boolean =>
