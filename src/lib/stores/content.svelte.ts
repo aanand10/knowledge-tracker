@@ -28,8 +28,11 @@ async function fetchText(url: string, signal: AbortSignal): Promise<string> {
 	// AbortSignal.any: abort if EITHER the caller cancels OR the timeout fires.
 	const combined = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
 	try {
-		// `no-cache` revalidates with GitHub so new notes show up after a push.
-		const response = await fetch(url, { signal: combined, cache: 'no-cache' });
+		// GitHub's raw CDN caches files for 5 minutes. A `v` param that changes every
+		// minute skips that cache, so a push shows up within about a minute.
+		const fresh = new URL(url);
+		fresh.searchParams.set('v', String(Math.floor(Date.now() / 60_000)));
+		const response = await fetch(fresh, { signal: combined, cache: 'no-cache' });
 		if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
 		return await response.text();
 	} catch (error) {
