@@ -3,12 +3,15 @@
 
 	let open = $state(false);
 	let email = $state('');
+	let name = $state('');
+	let editingName = $state(false);
+	let nameDraft = $state('');
 
 	const statusText = { off: '', syncing: 'syncing…', synced: 'synced', error: 'sync error' };
 
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
-		if (email.trim()) await cloud.sendMagicLink(email);
+		if (email.trim()) await cloud.sendMagicLink(email, name);
 	}
 </script>
 
@@ -26,9 +29,9 @@
 				class="grid size-6 place-items-center rounded-full bg-panel text-fg ring-1 ring-line hover:ring-muted"
 				onclick={() => (open = !open)}
 				aria-expanded={open}
-				aria-label="Account: {cloud.user.email}"
+				aria-label="Account: {cloud.user.name}"
 			>
-				{(cloud.user.email ?? '?').charAt(0).toUpperCase()}
+				{cloud.user.name.charAt(0).toUpperCase()}
 			</button>
 		{:else}
 			<button
@@ -45,6 +48,32 @@
 				class="absolute top-8 right-0 z-50 w-64 space-y-2 border border-line bg-bg p-3 shadow-lg"
 			>
 				{#if cloud.user}
+					{#if editingName}
+						<form
+							class="flex gap-1.5"
+							onsubmit={async (e) => {
+								e.preventDefault();
+								await cloud.updateName(nameDraft);
+								editingName = false;
+							}}
+						>
+							<label for="display-name" class="sr-only">Your name</label>
+							<input id="display-name" class="input" maxlength="60" bind:value={nameDraft} />
+							<button type="submit" class="btn">save</button>
+						</form>
+					{:else}
+						<p class="flex items-baseline justify-between gap-2">
+							<span class="font-semibold text-fg">{cloud.user.name}</span>
+							<button
+								type="button"
+								class="link"
+								onclick={() => {
+									nameDraft = cloud.user?.name ?? '';
+									editingName = true;
+								}}>edit</button
+							>
+						</p>
+					{/if}
 					<p class="break-all text-muted">{cloud.user.email}</p>
 					<p class={cloud.status === 'error' ? 'text-danger' : 'text-muted'}>
 						{cloud.status === 'error'
@@ -67,7 +96,18 @@
 					>
 				{:else}
 					<form onsubmit={submit} class="space-y-2">
-						<label for="signin-email" class="label">sign in to sync across devices</label>
+						<p class="label">sign in to sync across devices</p>
+						<label for="signin-name" class="sr-only">Your name (optional)</label>
+						<input
+							id="signin-name"
+							type="text"
+							autocomplete="name"
+							maxlength="60"
+							class="input"
+							placeholder="your name (optional)"
+							bind:value={name}
+						/>
+						<label for="signin-email" class="sr-only">Email</label>
 						<input
 							id="signin-email"
 							type="email"

@@ -82,7 +82,7 @@ function fromRows(rows: ProgressRow[], notes: NoteRow[]): ProgressMap {
 
 class CloudStore {
 	readonly enabled = isCloudConfigured();
-	user = $state<{ id: string; email: string | null } | null>(null);
+	user = $state<{ id: string; email: string | null; name: string } | null>(null);
 	status = $state<SyncStatus>('off');
 	error = $state<string | null>(null);
 	busy = $state(false);
@@ -135,7 +135,8 @@ class CloudStore {
 	}
 
 	/** Email a magic sign-in link. */
-	async sendMagicLink(email: string) {
+	/** `name` is optional; it's stored on the new account (auth metadata → profiles.display_name). */
+	async sendMagicLink(email: string, name = '') {
 		this.error = null;
 		this.busy = true;
 		try {
@@ -144,7 +145,11 @@ class CloudStore {
 			const redirectTo = new URL(resolve('/'), location.href).href;
 			const { error } = await sb.auth.signInWithOtp({
 				email: email.trim(),
-				options: { emailRedirectTo: redirectTo }
+				options: {
+					emailRedirectTo: redirectTo,
+					// Only applied when the account is created (first sign-in).
+					data: name.trim() ? { full_name: name.trim().slice(0, 60) } : undefined
+				}
 			});
 			if (error) throw error;
 			this.linkSentTo = email.trim();
@@ -153,6 +158,19 @@ class CloudStore {
 		} finally {
 			this.busy = false;
 		}
+	}
+
+	/** Change the display name (shown in the menu and, later, on the leaderboard). */
+	async updateName(name: string) {
+		const clean = name.trim().slice(0, 60);
+		if (!clean || !this.user) return;
+		const sb = await this.sdk();
+		const { error } = await sb
+			.from('profiles')
+			.update({ display_name: clean })
+			.eq('id', this.user.id);
+		if (error) this.fail(error);
+		else this.user.name = clean;
 	}
 
 	async signOut() {
@@ -165,8 +183,19 @@ class CloudStore {
 
 	private async start(sb: SupabaseClient, u: User) {
 		writeString(SIGNED_IN_HINT, '1');
-		this.user = { id: u.id, email: u.email ?? null };
+		const fallback =
+			(u.user_metadata?.full_name as string | undefined) ?? u.email?.split('@')[0] ?? 'you';
+		this.user = { id: u.id, email: u.email ?? null, name: fallback };
 		this.linkSentTo = null;
+		// The profile row (created by a DB trigger) holds the editable display name.
+		void sb
+			.from('profiles')
+			.select('display_name')
+			.eq('id', u.id)
+			.maybeSingle()
+			.then(({ data }) => {
+				if (data?.display_name && this.user) this.user.name = data.display_name;
+			});
 		this.status = 'syncing';
 		// Clean the magic-link tokens out of the address bar.
 		if (location.hash.includes('access_token'))
