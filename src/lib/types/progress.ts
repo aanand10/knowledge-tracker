@@ -21,6 +21,8 @@ export interface TopicProgress {
 	history: string[];
 	/** Short personal notes, separate from the Markdown note on GitHub. */
 	quickNotes: string;
+	/** ISO timestamp of the last change. Used to merge progress across devices. */
+	updatedAt: string | null;
 }
 
 /** All progress, keyed by topic id. */
@@ -35,6 +37,7 @@ export function defaultProgress(): TopicProgress {
 		reviewCount: 0,
 		intervalStep: -1,
 		history: [],
-		quickNotes: ''
+		quickNotes: '',
+		updatedAt: null
 	};
 }

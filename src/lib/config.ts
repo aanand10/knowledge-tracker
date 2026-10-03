@@ -39,3 +39,18 @@ export function githubContentBaseUrl(config = contentConfig): string | null {
 export const analyticsConfig = {
 	goatcounterCode: 'aanand10'
 };
+
+/**
+ * Optional login + cloud sync with Firebase (free Spark plan).
+ * Leave `apiKey` empty to keep the app local-only (nothing from Firebase is loaded).
+ * These values are safe to commit: access is controlled by firestore.rules.
+ * Setup steps are in the README ("Login and cloud sync").
+ */
+export const firebaseConfig = {
+	apiKey: '',
+	authDomain: '',
+	projectId: '',
+	appId: ''
+};
+
+export const isFirebaseConfigured = (): boolean => Boolean(firebaseConfig.apiKey.trim());

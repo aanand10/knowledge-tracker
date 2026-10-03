@@ -7,6 +7,7 @@
 	import { content } from '#lib/stores/content.svelte.ts';
 	import { theme } from '#lib/stores/theme.svelte.ts';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
+	import AccountButton from '#lib/components/AccountButton.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
 	import VisitorCount from '#lib/components/VisitorCount.svelte';
 	import { trackPageView } from '#lib/utils/analytics.ts';
@@ -84,6 +85,7 @@
 			</ul>
 		</nav>
 		<ThemeToggle />
+		<AccountButton />
 	</div>
 </header>
 

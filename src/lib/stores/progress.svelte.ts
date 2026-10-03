@@ -20,6 +20,8 @@ export interface ImportResult {
 	warnings: string[];
 }
 
+const now = () => new Date().toISOString();
+
 class ProgressStore {
 	// `$state` on a class field makes it reactive. Reading `this.map` inside a
 	// component, $derived or $effect subscribes to it automatically.
@@ -46,12 +48,15 @@ class ProgressStore {
 		// Assigning a new object (instead of mutating) keeps the data easy to reason
 		// about. `$state` would also track deep mutations, but a single
 		// assignment is simpler to follow.
-		this.map = { ...this.map, [id]: { ...this.get(id), ...patch } };
+		this.map = { ...this.map, [id]: { ...this.get(id), ...patch, updatedAt: now() } };
 		this.persist();
 	}
 
 	review(id: string, rating: Rating, today = todayISO()) {
-		this.map = { ...this.map, [id]: scheduleReview(this.get(id), rating, today) };
+		this.map = {
+			...this.map,
+			[id]: { ...scheduleReview(this.get(id), rating, today), updatedAt: now() }
+		};
 		this.persist();
 	}
 
@@ -86,12 +91,35 @@ class ProgressStore {
 	reset() {
 		this.map = {};
 		this.saveFailed = !clearProgress() && browser;
+		this.notify();
+	}
+
+	/**
+	 * Replace everything with data that came from the cloud (already merged).
+	 * Saves locally but does NOT notify listeners, so it never echoes back to the cloud.
+	 */
+	replaceFromCloud(map: ProgressMap) {
+		this.map = map;
+		this.saveFailed = !saveProgress(this.map);
+	}
+
+	/** Subscribe to local changes (used by cloud sync). Returns an unsubscribe function. */
+	onChange(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	private listeners = new Set<() => void>();
+
+	private notify() {
+		for (const listener of this.listeners) listener();
 	}
 
 	private persist() {
 		// We save explicitly after each change instead of using $effect: an $effect
 		// at module level would need $effect.root and is harder to follow.
 		this.saveFailed = !saveProgress(this.map);
+		this.notify();
 	}
 }
 

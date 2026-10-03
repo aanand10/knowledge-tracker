@@ -104,6 +104,25 @@ Details:
 - Ad blockers may block the script. Those visits aren't counted and the app keeps working.
 - With the code left empty, no analytics script loads at all.
 
+## Login and cloud sync (optional, free)
+
+Off by default. When enabled, a **sign in** link appears in the header. Signed-in users get their
+progress and quick notes synced across devices through Firebase (free Spark plan). Logged-out use
+is unchanged (localStorage only), and the Firebase SDK is only downloaded when someone signs in.
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com) (no billing needed).
+2. **Build → Authentication → Get started → Sign-in method → Google → Enable.**
+3. **Authentication → Settings → Authorized domains → Add** `aanand10.github.io`.
+4. **Build → Firestore Database → Create database** (production mode, any region near you).
+5. **Firestore → Rules:** paste [`firestore.rules`](firestore.rules) and publish. Each user can only read/write `users/{their uid}`.
+6. **Project settings → General → Your apps → Web app (`</>`)**, register it, and copy `apiKey`,
+   `authDomain`, `projectId` and `appId` into `firebaseConfig` in [`src/lib/config.ts`](src/lib/config.ts).
+7. Push. These keys are safe to commit; access is enforced by the rules.
+
+How sync works: every change is saved locally first, then written to Firestore (debounced 1.5 s, so
+typing notes is one write). Other devices receive changes live. When both sides changed, the newest
+change per topic wins (`updatedAt`). One user is one small document, far below the free quotas.
+
 ## Deploy to GitHub Pages
 
 1. Push this project to its own GitHub repo (e.g. `knowledge-tracker`).

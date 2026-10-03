@@ -162,7 +162,11 @@ export function sanitizeProgress(raw: unknown): TopicProgress | null {
 		reviewCount: Number.isInteger(reviewCount) && reviewCount >= 0 ? reviewCount : 0,
 		intervalStep: Number.isInteger(intervalStep) && intervalStep >= -1 ? intervalStep : -1,
 		history: Array.isArray(raw.history) ? raw.history.filter(isISODate) : [],
-		quickNotes: typeof raw.quickNotes === 'string' ? raw.quickNotes : ''
+		quickNotes: typeof raw.quickNotes === 'string' ? raw.quickNotes : '',
+		updatedAt:
+			typeof raw.updatedAt === 'string' && !Number.isNaN(Date.parse(raw.updatedAt))
+				? raw.updatedAt
+				: null
 	};
 }
 
