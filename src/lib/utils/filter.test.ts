@@ -16,6 +16,7 @@ function topic(partial: Partial<Topic> & { id: string }): Topic {
 	return {
 		title: partial.id,
 		category: 'JavaScript',
+		area: partial.category === 'React' ? 'Frameworks' : 'JavaScript',
 		priority: 'medium',
 		tags: [],
 		note: null,
@@ -251,7 +252,22 @@ describe('groupTopics category order', () => {
 			'JavaScript'
 		]);
 		expect(
-			groupTopics(sorted, progress, 'category', ['JavaScript', 'React']).map((g) => g.key)
+			groupTopics(sorted, progress, 'category', { category: ['JavaScript', 'React'] }).map(
+				(g) => g.key
+			)
 		).toEqual(['JavaScript', 'React']);
+	});
+});
+
+describe('areas', () => {
+	it('filters and groups by area', () => {
+		expect(ids(filterTopics(topics, progress, { ...DEFAULT_FILTERS, area: 'Frameworks' }))).toEqual(
+			['keys', 'hooks']
+		);
+		expect(
+			groupTopics(topics, progress, 'area', { area: ['Frameworks', 'JavaScript'] }).map(
+				(g) => g.key
+			)
+		).toEqual(['Frameworks', 'JavaScript']);
 	});
 });

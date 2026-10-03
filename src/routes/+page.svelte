@@ -11,6 +11,7 @@
 		filtersToParams,
 		groupTopics,
 		sortTopics,
+		uniqueAreas,
 		uniqueCategories,
 		uniqueTags,
 		type TopicFilters
@@ -27,6 +28,7 @@
 	// and can be bookmarked. `page.url` is reactive, so this $derived re-runs on navigation.
 	const filters = $derived(filtersFromParams(page.url.searchParams));
 
+	const areas = $derived(uniqueAreas(content.topics));
 	const categories = $derived(uniqueCategories(content.topics));
 	const tags = $derived(uniqueTags(content.topics));
 	// A tag every topic has (e.g. a shared "company" tag) adds nothing on each row, so hide it there.
@@ -34,7 +36,9 @@
 	const visible = $derived(
 		sortTopics(filterTopics(content.topics, progress.map, filters), progress.map, filters.sort)
 	);
-	const groups = $derived(groupTopics(visible, progress.map, filters.group, categories));
+	const groups = $derived(
+		groupTopics(visible, progress.map, filters.group, { category: categories, area: areas })
+	);
 	const totals = $derived(countStatuses(content.topics, progress.map));
 	const today = todayISO();
 
@@ -81,6 +85,7 @@
 			{filters}
 			topics={content.topics}
 			progress={progress.map}
+			{areas}
 			{categories}
 			{tags}
 			onchange={applyFilters}
@@ -132,19 +137,37 @@
 							</button>
 						</h2>
 						{#if open}
-							<ul class="divide-y divide-line">
-								{#each group.topics as topic (topic.id)}
-									<li>
-										<TopicCard
-											{topic}
-											progress={progress.get(topic.id)}
-											{today}
-											{hiddenTags}
-											showCategory={filters.group !== 'category'}
-										/>
-									</li>
+							{#if filters.group === 'area'}
+								<!-- Inside an area, list each category as a small sub-heading. -->
+								{#each groupTopics( group.topics, progress.map, 'category', { category: categories } ) as sub (sub.key)}
+									<h3
+										class="border-b border-line px-3 pt-2.5 pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+									>
+										{sub.label} <span class="font-normal">({sub.topics.length})</span>
+									</h3>
+									<ul class="divide-y divide-line border-b border-line last:border-b-0">
+										{#each sub.topics as topic (topic.id)}
+											<li>
+												<TopicCard {topic} progress={progress.get(topic.id)} {today} {hiddenTags} />
+											</li>
+										{/each}
+									</ul>
 								{/each}
-							</ul>
+							{:else}
+								<ul class="divide-y divide-line">
+									{#each group.topics as topic (topic.id)}
+										<li>
+											<TopicCard
+												{topic}
+												progress={progress.get(topic.id)}
+												{today}
+												{hiddenTags}
+												showCategory={filters.group !== 'category'}
+											/>
+										</li>
+									{/each}
+								</ul>
+							{/if}
 						{/if}
 					</section>
 				{/each}

@@ -12,6 +12,8 @@ export interface Topic {
 	id: string;
 	title: string;
 	category: string;
+	/** Broad area that groups categories (e.g. "JavaScript", "Frameworks"). Defaults to the category. */
+	area: string;
 	priority: Priority;
 	tags: string[];
 	/** Path to the Markdown note, relative to the content root, e.g. "notes/javascript/closures.md". */

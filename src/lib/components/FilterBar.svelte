@@ -17,13 +17,14 @@
 		/** All topics (unfiltered), used for the counts on each chip. */
 		topics: Topic[];
 		progress: ProgressMap;
+		areas: string[];
 		categories: string[];
 		tags: string[];
 		/** Called with the full, updated filter object. The parent decides where to store it (the URL). */
 		onchange: (filters: TopicFilters) => void;
 	}
 
-	let { filters, topics, progress, categories, tags, onchange }: Props = $props();
+	let { filters, topics, progress, areas, categories, tags, onchange }: Props = $props();
 
 	function update(patch: Partial<TopicFilters>) {
 		onchange({ ...filters, ...patch });
@@ -41,6 +42,18 @@
 	const byPriority = $derived(countBy(topics, (t) => t.priority));
 	const byStatus = $derived(countBy(topics, (t) => progressFor(progress, t.id).status));
 	const byCategory = $derived(countBy(topics, (t) => t.category));
+	const byArea = $derived(countBy(topics, (t) => t.area));
+	// With an area picked, only offer that area's categories.
+	const visibleCategories = $derived(
+		filters.area
+			? categories.filter((c) => topics.some((t) => t.category === c && t.area === filters.area))
+			: categories
+	);
+
+	function toggleArea(area: string) {
+		// Switching area clears the category, which may not belong to the new area.
+		update({ area: filters.area === area ? '' : area, category: '' });
+	}
 	const withNotes = $derived(topics.filter((t) => t.note !== null).length);
 
 	// Debounce typing so we don't rewrite the URL on every keystroke.
@@ -159,6 +172,15 @@
 			>
 		</div>
 
+		<span class="pt-1 text-muted" id="f-area">area</span>
+		<div class="flex flex-wrap gap-1.5" role="group" aria-labelledby="f-area">
+			{#each areas as a (a)}
+				<Chip active={filters.area === a} onclick={() => toggleArea(a)} count={byArea.get(a) ?? 0}
+					>{a}</Chip
+				>
+			{/each}
+		</div>
+
 		<span class="pt-1 text-muted" id="f-category">category</span>
 		<!-- Scrolls sideways on phones instead of wrapping into a tall block. -->
 		<div
@@ -166,7 +188,7 @@
 			role="group"
 			aria-labelledby="f-category"
 		>
-			{#each categories as c (c)}
+			{#each visibleCategories as c (c)}
 				<Chip
 					active={filters.category === c}
 					onclick={() => toggle('category', c)}

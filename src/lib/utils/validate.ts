@@ -122,11 +122,18 @@ export function validateTopics(data: unknown): ValidationResult<Topic[]> {
 			warnings.push(`${label}: "resources" should be an array, ignored.`);
 		}
 
+		let area = raw.category.trim();
+		if (raw.area !== undefined) {
+			if (nonEmptyString(raw.area)) area = raw.area.trim();
+			else warnings.push(`${label}: "area" should be a non-empty string, using the category.`);
+		}
+
 		seen.add(raw.id);
 		topics.push({
 			id: raw.id,
 			title: raw.title.trim(),
 			category: raw.category.trim(),
+			area,
 			priority,
 			tags,
 			note,

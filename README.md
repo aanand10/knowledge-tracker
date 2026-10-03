@@ -62,6 +62,7 @@ In your content repo:
    	"id": "js-closures",
    	"title": "Closures",
    	"category": "JavaScript",
+   	"area": "JavaScript",
    	"priority": "high",
    	"tags": ["fundamentals"],
    	"note": "notes/javascript/closures.md",
@@ -74,15 +75,16 @@ In your content repo:
 
 Validation rules (an invalid entry is skipped, and you get a warning banner instead of a crash):
 
-| Field       | Rules                                                                            |
-| ----------- | -------------------------------------------------------------------------------- |
-| `id`        | Required, unique, letters/digits/`-`/`_`. Progress is keyed by it; don't rename. |
-| `title`     | Required.                                                                        |
-| `category`  | Required. Categories appear in the order they first occur.                       |
-| `priority`  | `high` / `medium` / `low`. Optional, defaults to `medium`.                       |
-| `tags`      | Optional array of strings.                                                       |
-| `note`      | Optional relative path to a `.md` file (no `..`, no absolute URLs).              |
-| `resources` | Optional array of `{ label, url }` with `http(s)` URLs.                          |
+| Field       | Rules                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| `id`        | Required, unique, letters/digits/`-`/`_`. Progress is keyed by it; don't rename.                          |
+| `title`     | Required.                                                                                                 |
+| `category`  | Required. Categories appear in the order they first occur.                                                |
+| `area`      | Optional broad group above categories (e.g. `JavaScript`, `Frameworks`, `DSA`). Defaults to the category. |
+| `priority`  | `high` / `medium` / `low`. Optional, defaults to `medium`.                                                |
+| `tags`      | Optional array of strings.                                                                                |
+| `note`      | Optional relative path to a `.md` file (no `..`, no absolute URLs).                                       |
+| `resources` | Optional array of `{ label, url }` with `http(s)` URLs.                                                   |
 
 ## Visitor counter (optional)
 

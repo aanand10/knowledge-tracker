@@ -7,6 +7,7 @@ const t = (id: string): Topic => ({
 	id,
 	title: id,
 	category: 'C',
+	area: 'C',
 	priority: 'medium',
 	tags: [],
 	note: null,

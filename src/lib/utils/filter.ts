@@ -18,7 +18,7 @@ export const SORT_LABELS: Record<SortKey, string> = {
 	title: 'title'
 };
 
-export const GROUP_KEYS = ['category', 'priority', 'status', 'round', 'none'] as const;
+export const GROUP_KEYS = ['area', 'category', 'priority', 'status', 'round', 'none'] as const;
 export type GroupKey = (typeof GROUP_KEYS)[number];
 
 export const NOTE_FILTERS = ['', 'yes', 'no'] as const;
@@ -27,6 +27,7 @@ export type NoteFilter = (typeof NOTE_FILTERS)[number];
 export interface TopicFilters {
 	/** Free-text search across title, category and tags ("#tag" works too). */
 	q: string;
+	area: string;
 	category: string;
 	status: Status | '';
 	priority: Priority | '';
@@ -39,13 +40,14 @@ export interface TopicFilters {
 
 export const DEFAULT_FILTERS: TopicFilters = {
 	q: '',
+	area: '',
 	category: '',
 	status: '',
 	priority: '',
 	tag: '',
 	notes: '',
 	sort: 'priority',
-	group: 'category'
+	group: 'area'
 };
 
 /** Read filters from URL search params, ignoring unknown values. */
@@ -57,6 +59,7 @@ export function filtersFromParams(params: Pick<URLSearchParams, 'get'>): TopicFi
 	const group = params.get('group') ?? '';
 	return {
 		q: params.get('q') ?? '',
+		area: params.get('area') ?? '',
 		category: params.get('category') ?? '',
 		status: STATUSES.includes(status as Status) ? (status as Status) : '',
 		priority: PRIORITIES.includes(priority as Priority) ? (priority as Priority) : '',
@@ -95,6 +98,7 @@ export function filterTopics(
 ): Topic[] {
 	const query = filters.q.trim().toLowerCase().replace(/^#/, '');
 	return topics.filter((topic) => {
+		if (filters.area && topic.area !== filters.area) return false;
 		if (filters.category && topic.category !== filters.category) return false;
 		if (filters.priority && topic.priority !== filters.priority) return false;
 		if (filters.tag && !topic.tags.includes(filters.tag)) return false;
@@ -153,6 +157,10 @@ export function uniqueCategories(topics: Topic[]): string[] {
 	return [...new Set(topics.map((t) => t.category))];
 }
 
+export function uniqueAreas(topics: Topic[]): string[] {
+	return [...new Set(topics.map((t) => t.area))];
+}
+
 export function uniqueTags(topics: Topic[]): string[] {
 	return [...new Set(topics.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b));
 }
@@ -178,8 +186,8 @@ export function groupTopics(
 	topics: Topic[],
 	progress: ProgressMap,
 	group: GroupKey,
-	/** Category order to use (e.g. topics.json order); defaults to first-seen order. */
-	categoryOrder: string[] = []
+	/** Group order for categories/areas (e.g. topics.json order); defaults to first-seen order. */
+	orders: { category?: string[]; area?: string[] } = {}
 ): TopicGroup[] {
 	const groups = new Map<string, TopicGroup>();
 	const add = (key: string, label: string, topic: Topic) => {
@@ -188,7 +196,8 @@ export function groupTopics(
 		else groups.set(key, { key, label, topics: [topic] });
 	};
 	const order: Record<GroupKey, string[]> = {
-		category: categoryOrder,
+		area: orders.area ?? [],
+		category: orders.category ?? [],
 		priority: [...PRIORITIES],
 		status: ['learning', 'not-started', 'confident'],
 		round: [...Object.keys(ROUND_LABELS), 'other'],
@@ -197,6 +206,9 @@ export function groupTopics(
 
 	for (const topic of topics) {
 		switch (group) {
+			case 'area':
+				add(topic.area, topic.area, topic);
+				break;
 			case 'category':
 				add(topic.category, topic.category, topic);
 				break;
@@ -222,7 +234,7 @@ export function groupTopics(
 		const i = order[group].indexOf(key);
 		return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 	};
-	// Category keeps first-seen order (stable sort with equal ranks); the rest use `order`.
+	// Area/category keep first-seen order (stable sort with equal ranks); the rest use `order`.
 	return [...groups.values()].sort((a, b) => rank(a.key) - rank(b.key));
 }
 

@@ -15,7 +15,7 @@ describe('validateTopics', () => {
 	it('accepts a valid topic', () => {
 		const { value, warnings } = validateTopics([valid]);
 		expect(warnings).toEqual([]);
-		expect(value).toEqual([valid]);
+		expect(value).toEqual([{ ...valid, area: 'JavaScript' }]);
 	});
 
 	it('rejects non-array input', () => {
@@ -58,6 +58,7 @@ describe('validateTopics', () => {
 			id: 'x',
 			title: 'X',
 			category: 'C',
+			area: 'C',
 			priority: 'medium',
 			tags: [],
 			note: null,
@@ -125,5 +126,14 @@ describe('validateProgressMap', () => {
 	it('skips non-object entries and rejects non-objects', () => {
 		expect(validateProgressMap({ a: 5 }).warnings).toHaveLength(1);
 		expect(validateProgressMap([1, 2]).value).toEqual({});
+	});
+});
+
+describe('area field', () => {
+	it('uses the area when given and warns on a bad one', () => {
+		expect(validateTopics([{ ...valid, area: ' Languages ' }]).value[0]?.area).toBe('Languages');
+		const bad = validateTopics([{ ...valid, area: 5 }]);
+		expect(bad.value[0]?.area).toBe('JavaScript');
+		expect(bad.warnings).toHaveLength(1);
 	});
 });
