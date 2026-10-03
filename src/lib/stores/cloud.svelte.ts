@@ -168,6 +168,27 @@ class CloudStore {
 		}
 	}
 
+	/** Sign in with the one-time code from the email (handy on phones). */
+	async verifyCode(code: string) {
+		if (!this.linkSentTo) return;
+		this.error = null;
+		this.busy = true;
+		try {
+			const sb = await this.sdk();
+			await this.init();
+			const { error } = await sb.auth.verifyOtp({
+				email: this.linkSentTo,
+				token: code.replace(/\s/g, ''),
+				type: 'email'
+			});
+			if (error) throw error;
+		} catch (e) {
+			this.fail(e);
+		} finally {
+			this.busy = false;
+		}
+	}
+
 	/** Change the display name (shown in the menu and, later, on the leaderboard). */
 	async updateName(name: string) {
 		const clean = name.trim().slice(0, 60);

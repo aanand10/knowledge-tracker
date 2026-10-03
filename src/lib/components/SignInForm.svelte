@@ -3,6 +3,9 @@
 
 	let name = $state('');
 	let email = $state('');
+	let code = $state('');
+	// Supabase email codes are 6 digits by default (configurable up to 10).
+	const CODE_PATTERN = '[0-9 ]{6,12}';
 	// $props.id() gives unique ids, so this form can appear twice on a page safely.
 	const id = $props.id();
 
@@ -13,16 +16,40 @@
 </script>
 
 {#if cloud.linkSentTo}
-	<div class="space-y-2 text-sm" role="status">
+	<div class="space-y-3 text-sm" role="status">
 		<p>
-			We sent a sign-in link to <span class="font-semibold">{cloud.linkSentTo}</span>.
+			We emailed <span class="font-semibold">{cloud.linkSentTo}</span>. Tap the button in the email,
+			or enter the code here.
 		</p>
-		<p class="text-xs text-muted">
-			Open it on this device (check spam the first time). The email comes from "Supabase Auth".
-		</p>
-		<button type="button" class="text-xs link" onclick={() => (cloud.linkSentTo = null)}
-			>use a different email</button
+		<form
+			class="flex gap-2"
+			onsubmit={async (e) => {
+				e.preventDefault();
+				await cloud.verifyCode(code);
+			}}
 		>
+			<label for="{id}-code" class="sr-only">Code from the email</label>
+			<input
+				id="{id}-code"
+				class="input text-center font-mono tracking-[0.3em]"
+				inputmode="numeric"
+				autocomplete="one-time-code"
+				pattern={CODE_PATTERN}
+				placeholder="code"
+				required
+				bind:value={code}
+			/>
+			<button type="submit" class="btn-primary" disabled={cloud.busy}>
+				{cloud.busy ? '…' : 'verify'}
+			</button>
+		</form>
+		{#if cloud.error}<p class="text-xs text-danger" role="alert">{cloud.error}</p>{/if}
+		<p class="text-xs text-muted">
+			From "Recall". Check spam the first time.
+			<button type="button" class="link" onclick={() => (cloud.linkSentTo = null)}
+				>use a different email</button
+			>
+		</p>
 	</div>
 {:else}
 	<form onsubmit={submit} class="space-y-2">
