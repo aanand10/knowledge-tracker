@@ -1,118 +1,154 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { content } from '#lib/stores/content.svelte.ts';
 	import { progress } from '#lib/stores/progress.svelte.ts';
+	import {
+		filterTopics,
+		filtersFromParams,
+		filtersToParams,
+		groupTopics,
+		sortTopics,
+		uniqueCategories,
+		uniqueTags,
+		type TopicFilters
+	} from '#lib/utils/filter.ts';
+	import { countStatuses } from '#lib/utils/stats.ts';
 	import { todayISO } from '#lib/utils/dates.ts';
-	import { countStatuses, dueTopics, reviewStreak, reviewsThisWeek } from '#lib/utils/stats.ts';
-	import { groupByCategory } from '#lib/utils/filter.ts';
+	import { slugify } from '#lib/utils/slug.ts';
 	import ContentGate from '#lib/components/ContentGate.svelte';
-	import ProgressBar from '#lib/components/ProgressBar.svelte';
-	import PriorityBadge from '#lib/components/PriorityBadge.svelte';
-	import StatusBadge from '#lib/components/StatusBadge.svelte';
+	import FilterBar from '#lib/components/FilterBar.svelte';
+	import TopicCard from '#lib/components/TopicCard.svelte';
+	import StateMessage from '#lib/components/StateMessage.svelte';
 
+	// The URL is the single source of truth for filters, so they survive a refresh
+	// and can be bookmarked. `page.url` is reactive, so this $derived re-runs on navigation.
+	const filters = $derived(filtersFromParams(page.url.searchParams));
+
+	const categories = $derived(uniqueCategories(content.topics));
+	const tags = $derived(uniqueTags(content.topics));
+	// A tag every topic has (e.g. a shared "company" tag) adds nothing on each row, so hide it there.
+	const hiddenTags = $derived(tags.filter((t) => content.topics.every((x) => x.tags.includes(t))));
+	const visible = $derived(
+		sortTopics(filterTopics(content.topics, progress.map, filters), progress.map, filters.sort)
+	);
+	const groups = $derived(groupTopics(visible, progress.map, filters.group, categories));
+	const totals = $derived(countStatuses(content.topics, progress.map));
 	const today = todayISO();
 
-	// Everything below is $derived: when you review a topic or content reloads,
-	// the dashboard updates itself. No manual refresh logic needed.
-	const due = $derived(dueTopics(content.topics, progress.map, today));
-	const overall = $derived(countStatuses(content.topics, progress.map));
-	const categories = $derived(
-		groupByCategory(content.topics).map((g) => ({
-			category: g.category,
-			counts: countStatuses(g.topics, progress.map)
-		}))
-	);
-	const stats = $derived([
-		{ label: 'topics', value: content.topics.length },
-		{ label: 'due', value: due.length },
-		{ label: 'reviews (7d)', value: reviewsThisWeek(progress.map, today) },
-		{ label: 'streak', value: `${reviewStreak(progress.map, today)}d` }
-	]);
+	// SvelteSet is a reactive Set: adding/removing keys re-renders whatever reads it.
+	const collapsed = new SvelteSet<string>();
+	const allCollapsed = $derived(groups.length > 0 && groups.every((g) => collapsed.has(g.key)));
+
+	function toggleGroup(key: string) {
+		if (collapsed.has(key)) collapsed.delete(key);
+		else collapsed.add(key);
+	}
+
+	function toggleAll() {
+		if (allCollapsed) collapsed.clear();
+		else for (const g of groups) collapsed.add(g.key);
+	}
+
+	function applyFilters(next: TopicFilters) {
+		const query = filtersToParams(next).toString();
+		// replace: don't create a history entry per keystroke.
+		// reset: false keeps focus in the search box and the scroll position as is.
+		goto(resolve(query ? `/?${query}` : '/'), { replace: true, reset: false });
+	}
 </script>
 
-<svelte:head><title>Dashboard · Knowledge Tracker</title></svelte:head>
-
-<h1 class="sr-only">Dashboard</h1>
+<svelte:head><title>Topics · Knowledge Tracker</title></svelte:head>
 
 <ContentGate>
-	<div class="space-y-6">
-		<section aria-labelledby="stats-heading">
-			<h2 id="stats-heading" class="sr-only">Quick stats</h2>
-			<!-- gap-px over a line-coloured background draws 1px dividers between cells. -->
-			<dl class="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
-				{#each stats as stat (stat.label)}
-					<div class="bg-bg px-3 py-2">
-						<dt class="text-xs text-muted">{stat.label}</dt>
-						<dd class="text-lg font-semibold tabular-nums">{stat.value}</dd>
-					</div>
-				{/each}
-			</dl>
-		</section>
-
-		<section aria-labelledby="due-heading" class="box">
-			<h2 id="due-heading" class="box-head">
-				due for review <span class="text-fg">({due.length})</span>
-			</h2>
-			{#if due.length === 0}
-				<p class="px-3 py-3 text-xs text-muted">
-					nothing due today. Open a <a class="link" href={resolve('/topics')}>topic</a> and hit "Mark
-					reviewed" to start scheduling it.
+	<div class="space-y-5">
+		<header class="flex flex-wrap items-end justify-between gap-2">
+			<div>
+				<h1 class="font-sans text-xl font-semibold">Topics</h1>
+				<p class="text-xs text-muted">
+					{content.topics.length} topics ·
+					<span class="text-ok">{totals.confident} confident</span> ·
+					<span class="text-warn">{totals.learning} learning</span> ·
+					{totals['not-started']} to start
 				</p>
-			{:else}
-				<ul class="divide-y divide-line">
-					{#each due as item (item.topic.id)}
-						{@const overdue = item.daysOverdue > 0}
-						<li>
-							<a
-								href={resolve('/topics/[id]', { id: item.topic.id })}
-								class="flex items-baseline gap-3 px-3 py-2 hover:bg-panel"
-							>
-								<span class="w-20 shrink-0 text-xs {overdue ? 'text-danger' : 'text-warn'}">
-									{overdue ? `-${item.daysOverdue}d` : 'today'}
-								</span>
-								<span class="min-w-0 flex-1 truncate font-sans font-medium text-link">
-									{item.topic.title}
-								</span>
-								<span class="hidden text-xs text-muted sm:inline">{item.topic.category}</span>
-								<PriorityBadge priority={item.topic.priority} />
-							</a>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</section>
-
-		<section aria-labelledby="progress-heading" class="box">
-			<h2 id="progress-heading" class="flex justify-between gap-2 box-head">
-				<span>progress</span>
-				<span aria-hidden="true"
-					><span class="text-ok">confident</span>/<span class="text-warn">learning</span
-					>/total</span
-				>
-			</h2>
-			<div class="space-y-2 px-3 py-3">
-				<ProgressBar counts={overall} label="all" />
-				<div class="flex flex-wrap gap-x-3 pb-1 text-xs text-muted">
-					<StatusBadge status="confident" />
-					{overall.confident}
-					<StatusBadge status="learning" />
-					{overall.learning}
-					<StatusBadge status="not-started" />
-					{overall['not-started']}
-				</div>
-				<ul class="space-y-0.5 border-t border-line pt-2">
-					{#each categories as { category, counts } (category)}
-						<li>
-							<a
-								href={resolve(`/topics?category=${encodeURIComponent(category)}`)}
-								class="-mx-1.5 block px-1.5 py-1 hover:bg-panel"
-							>
-								<ProgressBar {counts} label={category} />
-							</a>
-						</li>
-					{/each}
-				</ul>
 			</div>
-		</section>
+			<a class="text-xs link" href={resolve('/dashboard')}>due for review →</a>
+		</header>
+
+		<FilterBar
+			{filters}
+			topics={content.topics}
+			progress={progress.map}
+			{categories}
+			{tags}
+			onchange={applyFilters}
+		/>
+
+		<div class="flex items-center justify-between text-xs text-muted">
+			<p aria-live="polite">
+				showing <span class="text-fg">{visible.length}</span> of {content.topics.length}
+			</p>
+			{#if groups.length > 1}
+				<button type="button" class="hover:text-fg" onclick={toggleAll}>
+					{allCollapsed ? 'expand all' : 'collapse all'}
+				</button>
+			{/if}
+		</div>
+
+		{#if visible.length === 0}
+			<StateMessage kind="empty" title="no topics match these filters" />
+		{:else}
+			<div class="space-y-3">
+				{#each groups as group (group.key)}
+					{@const counts = countStatuses(group.topics, progress.map)}
+					{@const open = !collapsed.has(group.key)}
+					{@const done = group.topics.length ? counts.confident / group.topics.length : 0}
+					{@const going = group.topics.length ? counts.learning / group.topics.length : 0}
+					<section class="box" aria-labelledby="grp-{slugify(group.key)}">
+						<h2 id="grp-{slugify(group.key)}">
+							<!-- A real <button> in the heading: keyboard and screen-reader friendly. -->
+							<button
+								type="button"
+								class="flex w-full items-center gap-3 bg-panel px-3 py-2 text-left hover:bg-line/40 {open
+									? 'border-b border-line'
+									: ''}"
+								aria-expanded={open}
+								onclick={() => toggleGroup(group.key)}
+							>
+								<span
+									class="text-muted transition-transform {open ? 'rotate-90' : ''}"
+									aria-hidden="true">▸</span
+								>
+								<span class="min-w-0 flex-1 truncate text-sm font-semibold">{group.label}</span>
+								<span class="hidden h-1.5 w-24 overflow-hidden bg-line sm:flex" aria-hidden="true">
+									<span class="bg-ok" style:width="{done * 100}%"></span>
+									<span class="bg-warn" style:width="{going * 100}%"></span>
+								</span>
+								<span class="text-xs text-muted tabular-nums">
+									<span class="text-ok">{counts.confident}</span>/{group.topics.length}
+								</span>
+							</button>
+						</h2>
+						{#if open}
+							<ul class="divide-y divide-line">
+								{#each group.topics as topic (topic.id)}
+									<li>
+										<TopicCard
+											{topic}
+											progress={progress.get(topic.id)}
+											{today}
+											{hiddenTags}
+											showCategory={filters.group !== 'category'}
+										/>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</section>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </ContentGate>

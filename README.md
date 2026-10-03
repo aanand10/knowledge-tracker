@@ -136,8 +136,9 @@ src/
     components/             ← TopicCard, StatusBadge, ProgressBar, FilterBar, MarkdownViewer,
                               ReviewButtons, ConfidenceInput, StatusPicker, …
   routes/
-    +page.svelte            ← dashboard
-    topics/+page.svelte     ← list with filters (state lives in URL search params)
+    +page.svelte            ← topic list (home): chips, grouping, filters in URL search params
+    dashboard/+page.svelte  ← due list, stats, progress per category
+    topics/+page.ts         ← redirects old /topics?… links to /
     topics/[id]/+page.svelte← note + progress editors
     settings/+page.svelte   ← source, reload, export / import / reset
 static/sample-content/      ← fallback content

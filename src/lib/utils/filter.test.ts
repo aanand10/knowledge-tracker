@@ -6,6 +6,8 @@ import {
 	filtersFromParams,
 	filtersToParams,
 	groupByCategory,
+	groupTopics,
+	countBy,
 	sortTopics,
 	uniqueTags
 } from './filter';
@@ -157,5 +159,99 @@ describe('grouping helpers', () => {
 
 	it('lists unique sorted tags', () => {
 		expect(uniqueTags(topics)).toEqual(['async', 'fundamentals', 'rendering']);
+	});
+});
+
+describe('notes filter and search extras', () => {
+	const withNotes = topics.map((t, i) => ({ ...t, note: i % 2 ? null : `notes/${t.id}.md` }));
+
+	it('filters by whether a note exists', () => {
+		expect(ids(filterTopics(withNotes, progress, { ...DEFAULT_FILTERS, notes: 'yes' }))).toEqual([
+			'closures',
+			'keys'
+		]);
+		expect(ids(filterTopics(withNotes, progress, { ...DEFAULT_FILTERS, notes: 'no' }))).toEqual([
+			'event-loop',
+			'hooks'
+		]);
+	});
+
+	it('matches "#tag" queries and category names', () => {
+		expect(ids(filterTopics(topics, progress, { ...DEFAULT_FILTERS, q: '#async' }))).toEqual([
+			'event-loop'
+		]);
+		expect(ids(filterTopics(topics, progress, { ...DEFAULT_FILTERS, q: 'react' }))).toEqual([
+			'keys',
+			'hooks'
+		]);
+	});
+
+	it('round-trips group and notes through the URL', () => {
+		const f = { ...DEFAULT_FILTERS, notes: 'yes' as const, group: 'round' as const };
+		expect(filtersFromParams(filtersToParams(f))).toEqual(f);
+		expect(filtersFromParams(new URLSearchParams('group=nope&notes=maybe'))).toEqual(
+			DEFAULT_FILTERS
+		);
+	});
+});
+
+describe('groupTopics', () => {
+	const labels = (g: { key: string; topics: Topic[] }[]) => g.map((x) => [x.key, ids(x.topics)]);
+
+	it('groups by priority in high, medium, low order', () => {
+		expect(labels(groupTopics(topics, progress, 'priority'))).toEqual([
+			['high', ['closures', 'event-loop']],
+			['medium', ['hooks']],
+			['low', ['keys']]
+		]);
+	});
+
+	it('groups by status with learning first', () => {
+		expect(labels(groupTopics(topics, progress, 'status'))).toEqual([
+			['learning', ['event-loop', 'keys']],
+			['not-started', ['hooks']],
+			['confident', ['closures']]
+		]);
+	});
+
+	it('puts a topic in every round it is tagged for', () => {
+		const tagged = [
+			topic({ id: 'a', tags: ['round-1', 'round-2'] }),
+			topic({ id: 'b', tags: ['round-2'] }),
+			topic({ id: 'c', tags: [] })
+		];
+		expect(labels(groupTopics(tagged, {}, 'round'))).toEqual([
+			['round-1', ['a']],
+			['round-2', ['a', 'b']],
+			['other', ['c']]
+		]);
+	});
+
+	it('keeps first-seen order for categories and has a single group for none', () => {
+		expect(groupTopics(topics, progress, 'category').map((g) => g.key)).toEqual([
+			'JavaScript',
+			'React'
+		]);
+		expect(groupTopics(topics, progress, 'none')).toHaveLength(1);
+	});
+});
+
+describe('countBy', () => {
+	it('counts single and multi-valued keys', () => {
+		expect(countBy(topics, (t) => t.priority).get('high')).toBe(2);
+		expect(countBy(topics, (t) => t.tags).get('fundamentals')).toBe(2);
+	});
+});
+
+describe('groupTopics category order', () => {
+	it('follows the given category order, not the sorted order', () => {
+		const sorted = sortTopics(topics, progress, 'confidence'); // hooks (React) comes first
+		expect(groupTopics(sorted, progress, 'category').map((g) => g.key)).toEqual([
+			'React',
+			'JavaScript'
+		]);
+		expect(
+			groupTopics(sorted, progress, 'category', ['JavaScript', 'React']).map((g) => g.key)
+		).toEqual(['JavaScript', 'React']);
 	});
 });

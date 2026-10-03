@@ -18,14 +18,23 @@ export const SORT_LABELS: Record<SortKey, string> = {
 	title: 'title'
 };
 
+export const GROUP_KEYS = ['category', 'priority', 'status', 'round', 'none'] as const;
+export type GroupKey = (typeof GROUP_KEYS)[number];
+
+export const NOTE_FILTERS = ['', 'yes', 'no'] as const;
+export type NoteFilter = (typeof NOTE_FILTERS)[number];
+
 export interface TopicFilters {
-	/** Free-text search across title and tags. */
+	/** Free-text search across title, category and tags ("#tag" works too). */
 	q: string;
 	category: string;
 	status: Status | '';
 	priority: Priority | '';
 	tag: string;
+	/** '' = all, 'yes' = only topics with a written note, 'no' = only topics without one. */
+	notes: NoteFilter;
 	sort: SortKey;
+	group: GroupKey;
 }
 
 export const DEFAULT_FILTERS: TopicFilters = {
@@ -34,7 +43,9 @@ export const DEFAULT_FILTERS: TopicFilters = {
 	status: '',
 	priority: '',
 	tag: '',
-	sort: 'priority'
+	notes: '',
+	sort: 'priority',
+	group: 'category'
 };
 
 /** Read filters from URL search params, ignoring unknown values. */
@@ -42,13 +53,17 @@ export function filtersFromParams(params: Pick<URLSearchParams, 'get'>): TopicFi
 	const status = params.get('status') ?? '';
 	const priority = params.get('priority') ?? '';
 	const sort = params.get('sort') ?? '';
+	const notes = params.get('notes') ?? '';
+	const group = params.get('group') ?? '';
 	return {
 		q: params.get('q') ?? '',
 		category: params.get('category') ?? '',
 		status: STATUSES.includes(status as Status) ? (status as Status) : '',
 		priority: PRIORITIES.includes(priority as Priority) ? (priority as Priority) : '',
 		tag: params.get('tag') ?? '',
-		sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : DEFAULT_FILTERS.sort
+		notes: NOTE_FILTERS.includes(notes as NoteFilter) ? (notes as NoteFilter) : '',
+		sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : DEFAULT_FILTERS.sort,
+		group: GROUP_KEYS.includes(group as GroupKey) ? (group as GroupKey) : DEFAULT_FILTERS.group
 	};
 }
 
@@ -64,7 +79,12 @@ export function filtersToParams(filters: TopicFilters): URLSearchParams {
 
 export function hasActiveFilters(filters: TopicFilters): boolean {
 	return Boolean(
-		filters.q.trim() || filters.category || filters.status || filters.priority || filters.tag
+		filters.q.trim() ||
+		filters.category ||
+		filters.status ||
+		filters.priority ||
+		filters.tag ||
+		filters.notes
 	);
 }
 
@@ -73,14 +93,16 @@ export function filterTopics(
 	progress: ProgressMap,
 	filters: TopicFilters
 ): Topic[] {
-	const query = filters.q.trim().toLowerCase();
+	const query = filters.q.trim().toLowerCase().replace(/^#/, '');
 	return topics.filter((topic) => {
 		if (filters.category && topic.category !== filters.category) return false;
 		if (filters.priority && topic.priority !== filters.priority) return false;
 		if (filters.tag && !topic.tags.includes(filters.tag)) return false;
+		if (filters.notes === 'yes' && topic.note === null) return false;
+		if (filters.notes === 'no' && topic.note !== null) return false;
 		if (filters.status && progressFor(progress, topic.id).status !== filters.status) return false;
 		if (query) {
-			const haystack = [topic.title, ...topic.tags].join(' ').toLowerCase();
+			const haystack = [topic.title, topic.category, ...topic.tags].join(' ').toLowerCase();
 			if (!haystack.includes(query)) return false;
 		}
 		return true;
@@ -133,4 +155,86 @@ export function uniqueCategories(topics: Topic[]): string[] {
 
 export function uniqueTags(topics: Topic[]): string[] {
 	return [...new Set(topics.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b));
+}
+
+export interface TopicGroup {
+	key: string;
+	label: string;
+	topics: Topic[];
+}
+
+const ROUND_LABELS: Record<string, string> = {
+	'round-1': 'Round 1 · JavaScript + Web',
+	'round-2': 'Round 2 · UI tech + machine coding',
+	'round-3': 'Round 3 · Hiring manager',
+	jd: 'From the JD'
+};
+
+/**
+ * Group already-filtered, already-sorted topics. Order inside each group is kept.
+ * In "round" mode a topic tagged for two rounds appears in both groups.
+ */
+export function groupTopics(
+	topics: Topic[],
+	progress: ProgressMap,
+	group: GroupKey,
+	/** Category order to use (e.g. topics.json order); defaults to first-seen order. */
+	categoryOrder: string[] = []
+): TopicGroup[] {
+	const groups = new Map<string, TopicGroup>();
+	const add = (key: string, label: string, topic: Topic) => {
+		const existing = groups.get(key);
+		if (existing) existing.topics.push(topic);
+		else groups.set(key, { key, label, topics: [topic] });
+	};
+	const order: Record<GroupKey, string[]> = {
+		category: categoryOrder,
+		priority: [...PRIORITIES],
+		status: ['learning', 'not-started', 'confident'],
+		round: [...Object.keys(ROUND_LABELS), 'other'],
+		none: ['all']
+	};
+
+	for (const topic of topics) {
+		switch (group) {
+			case 'category':
+				add(topic.category, topic.category, topic);
+				break;
+			case 'priority':
+				add(topic.priority, `${topic.priority} priority`, topic);
+				break;
+			case 'status': {
+				const status = progressFor(progress, topic.id).status;
+				add(status, status, topic);
+				break;
+			}
+			case 'round': {
+				const rounds = topic.tags.filter((t) => t in ROUND_LABELS);
+				if (rounds.length === 0) add('other', 'Other', topic);
+				for (const r of rounds) add(r, ROUND_LABELS[r] ?? r, topic);
+				break;
+			}
+			case 'none':
+				add('all', 'All topics', topic);
+		}
+	}
+	const rank = (key: string) => {
+		const i = order[group].indexOf(key);
+		return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+	};
+	// Category keeps first-seen order (stable sort with equal ranks); the rest use `order`.
+	return [...groups.values()].sort((a, b) => rank(a.key) - rank(b.key));
+}
+
+/** How many topics have each value of `key`, for the counts shown on filter chips. */
+export function countBy<T extends string>(
+	items: Topic[],
+	key: (t: Topic) => T | T[]
+): Map<T, number> {
+	const counts = new Map<T, number>();
+	for (const item of items) {
+		const value = key(item);
+		for (const v of Array.isArray(value) ? value : [value]) counts.set(v, (counts.get(v) ?? 0) + 1);
+	}
+	return counts;
 }

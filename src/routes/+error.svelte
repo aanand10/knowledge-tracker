@@ -7,5 +7,5 @@
 
 <div class="box px-3 py-4 text-xs">
 	<p class="text-danger">error {page.status}: {page.error?.message ?? 'something went wrong'}</p>
-	<a class="mt-2 inline-block link" href={resolve('/')}>← back to dashboard</a>
+	<a class="mt-2 inline-block link" href={resolve('/')}>← back to topics</a>
 </div>

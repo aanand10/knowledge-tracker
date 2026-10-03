@@ -34,14 +34,16 @@
 	// Match on the route id (e.g. "/topics/[id]") rather than the URL, so it works
 	// regardless of the GitHub Pages base path.
 	const links = [
-		{ href: resolve('/'), label: 'dashboard', section: '/' },
-		{ href: resolve('/topics'), label: 'topics', section: '/topics' },
+		{ href: resolve('/'), label: 'topics', section: '/topics' },
+		{ href: resolve('/dashboard'), label: 'dashboard', section: '/dashboard' },
 		{ href: resolve('/settings'), label: 'settings', section: '/settings' }
 	];
 
 	function isCurrent(section: string): boolean {
 		const id = page.route.id ?? '';
-		return section === '/' ? id === '/' : id.startsWith(section);
+		// The topic list lives at "/", topic pages at "/topics/[id]": both count as "topics".
+		if (section === '/topics') return id === '/' || id.startsWith('/topics');
+		return id.startsWith(section);
 	}
 </script>
 

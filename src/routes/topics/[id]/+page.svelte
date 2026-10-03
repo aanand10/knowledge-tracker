@@ -13,6 +13,7 @@
 	import ReviewButtons from '#lib/components/ReviewButtons.svelte';
 	import ConfidenceInput from '#lib/components/ConfidenceInput.svelte';
 	import StatusPicker from '#lib/components/StatusPicker.svelte';
+	import TopicTitle from '#lib/components/TopicTitle.svelte';
 
 	const id = $derived(page.params.id ?? '');
 	const topic = $derived(content.byId.get(id));
@@ -66,19 +67,19 @@
 </script>
 
 <svelte:head>
-	<title>{topic?.title ?? 'Topic'} · Knowledge Tracker</title>
+	<title>{topic?.title.replaceAll('`', '') ?? 'Topic'} · Knowledge Tracker</title>
 </svelte:head>
 
 <ContentGate>
 	{#if !topic}
 		<StateMessage kind="empty" title="topic not found: {id}">
-			<a class="link" href={resolve('/topics')}>← all topics</a>
+			<a class="link" href={resolve('/')}>← all topics</a>
 		</StateMessage>
 	{:else}
 		<nav aria-label="Breadcrumb" class="mb-2 text-xs text-muted">
-			<a class="link" href={resolve('/topics')}>topics</a>
+			<a class="link" href={resolve('/')}>topics</a>
 			<span aria-hidden="true">/</span>
-			<a class="link" href={resolve(`/topics?category=${encodeURIComponent(topic.category)}`)}>
+			<a class="link" href={resolve(`/?category=${encodeURIComponent(topic.category)}`)}>
 				{topic.category}
 			</a>
 			<span aria-hidden="true">/</span>
@@ -86,12 +87,14 @@
 		</nav>
 
 		<header class="mb-5 border-b border-line pb-3">
-			<h1 class="font-sans text-2xl font-semibold text-balance">{topic.title}</h1>
+			<h1 class="font-sans text-2xl font-semibold text-balance">
+				<TopicTitle title={topic.title} />
+			</h1>
 			<div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted">
 				<StatusBadge status={topicProgress.status} />
 				<span>priority:<PriorityBadge priority={topic.priority} /></span>
 				{#each topic.tags as tag (tag)}
-					<a href={resolve(`/topics?tag=${encodeURIComponent(tag)}`)} class="hover:text-link">
+					<a href={resolve(`/?tag=${encodeURIComponent(tag)}`)} class="hover:text-link">
 						#{tag}
 					</a>
 				{/each}
@@ -187,12 +190,15 @@
 			class="mt-10 flex justify-between gap-3 border-t border-line pt-3 text-xs"
 		>
 			{#if prev}
-				<a href={resolve('/topics/[id]', { id: prev.id })} class="link">← {prev.title}</a>
+				<a href={resolve('/topics/[id]', { id: prev.id })} class="link"
+					>← <TopicTitle title={prev.title} /></a
+				>
 			{:else}
 				<span></span>
 			{/if}
 			{#if next}
-				<a href={resolve('/topics/[id]', { id: next.id })} class="text-right link">{next.title} →</a
+				<a href={resolve('/topics/[id]', { id: next.id })} class="text-right link"
+					><TopicTitle title={next.title} /> →</a
 				>
 			{/if}
 		</nav>
