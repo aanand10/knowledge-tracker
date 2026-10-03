@@ -55,10 +55,18 @@
 </a>
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg">
-	<div class="mx-auto flex h-11 max-w-5xl items-center gap-4 px-4">
-		<a href={resolve('/')} class="mr-auto font-semibold whitespace-nowrap"> knowledge-tracker </a>
+	<div class="mx-auto flex h-11 max-w-5xl items-center gap-3 px-4 sm:gap-4">
+		<a
+			href={resolve('/')}
+			class="mr-auto font-semibold whitespace-nowrap"
+			aria-label="knowledge-tracker home"
+		>
+			<!-- Short name on phones so the nav never overflows. -->
+			<span class="sm:hidden" aria-hidden="true">kt</span>
+			<span class="hidden sm:inline">knowledge-tracker</span>
+		</a>
 		<nav aria-label="Main">
-			<ul class="flex gap-3 sm:gap-4">
+			<ul class="flex gap-2.5 sm:gap-4">
 				{#each links as link (link.href)}
 					{@const current = isCurrent(link.section)}
 					<li>
