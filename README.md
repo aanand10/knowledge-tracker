@@ -1,6 +1,8 @@
-# Knowledge Tracker
+# Recall
 
-A personal knowledge base for learning and revising interview topics, with spaced repetition.
+> Remember it on interview day.
+
+Recall is a personal knowledge base for learning and revising interview topics, with spaced repetition.
 
 - **Content** (topics + Markdown notes) lives in a GitHub repo you control.
 - **Progress** (status, confidence, review schedule, quick notes) lives in your browser's localStorage.

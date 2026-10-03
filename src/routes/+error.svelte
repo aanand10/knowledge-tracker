@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 </script>
 
-<svelte:head><title>Error · Knowledge Tracker</title></svelte:head>
+<svelte:head><title>Error · Recall</title></svelte:head>
 
 <div class="box px-3 py-4 text-xs">
 	<p class="text-danger">error {page.status}: {page.error?.message ?? 'something went wrong'}</p>

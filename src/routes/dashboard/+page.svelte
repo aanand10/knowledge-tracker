@@ -33,7 +33,7 @@
 	]);
 </script>
 
-<svelte:head><title>Dashboard · Knowledge Tracker</title></svelte:head>
+<svelte:head><title>Dashboard · Recall</title></svelte:head>
 
 <header class="mb-4">
 	{#if cloud.firstName}

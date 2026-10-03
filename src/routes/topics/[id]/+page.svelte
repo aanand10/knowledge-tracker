@@ -67,7 +67,7 @@
 </script>
 
 <svelte:head>
-	<title>{topic?.title.replaceAll('`', '') ?? 'Topic'} · Knowledge Tracker</title>
+	<title>{topic?.title.replaceAll('`', '') ?? 'Topic'} · Recall</title>
 </svelte:head>
 
 <ContentGate>

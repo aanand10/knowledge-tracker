@@ -40,7 +40,7 @@
 	}
 </script>
 
-<svelte:head><title>Settings · Knowledge Tracker</title></svelte:head>
+<svelte:head><title>Settings · Recall</title></svelte:head>
 
 <h1 class="sr-only">Settings</h1>
 

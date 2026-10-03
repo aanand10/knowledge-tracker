@@ -50,7 +50,7 @@
 		<div class="space-y-4 p-5">
 			<div class="flex items-start justify-between gap-3">
 				<h2 id="auth-title" class="font-sans text-lg font-semibold">
-					{ui.authDialog === 'welcome' ? 'Welcome to Knowledge Tracker' : 'Sign in'}
+					{ui.authDialog === 'welcome' ? 'Welcome to Recall' : 'Sign in'}
 				</h2>
 				<button type="button" class="text-muted hover:text-fg" aria-label="Close" onclick={dismiss}
 					>✕</button

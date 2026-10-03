@@ -113,7 +113,7 @@
 	}
 </script>
 
-<svelte:head><title>Topics · Knowledge Tracker</title></svelte:head>
+<svelte:head><title>Topics · Recall</title></svelte:head>
 
 <ContentGate>
 	<div class="space-y-5">
