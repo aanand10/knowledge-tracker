@@ -339,6 +339,18 @@ class CloudStore {
 
 	private fail(e: unknown) {
 		this.status = 'error';
+		const raw =
+			e instanceof Error
+				? e.message
+				: typeof e === 'object' && e && 'message' in e
+					? String(e.message)
+					: String(e);
+		// Supabase's built-in mailer only sends a few emails per hour per project.
+		if (/rate limit/i.test(raw)) {
+			this.error =
+				'Too many sign-in emails were sent in the last hour. Please try again in about an hour.';
+			return;
+		}
 		this.error =
 			e instanceof Error
 				? e.message
