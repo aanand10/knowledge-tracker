@@ -8,6 +8,8 @@
 	import { theme } from '#lib/stores/theme.svelte.ts';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import AccountButton from '#lib/components/AccountButton.svelte';
+	import AuthDialog from '#lib/components/AuthDialog.svelte';
+	import SignInNudge from '#lib/components/SignInNudge.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
 	import VisitorCount from '#lib/components/VisitorCount.svelte';
 	import { trackPageView } from '#lib/utils/analytics.ts';
@@ -90,6 +92,7 @@
 </header>
 
 <main id="main" class="mx-auto max-w-5xl px-4 py-5 pb-16" tabindex="-1">
+	<SignInNudge />
 	<ContentWarnings />
 	{@render children()}
 </main>
@@ -100,3 +103,5 @@
 	<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">source</a>
 	<VisitorCount />
 </footer>
+
+<AuthDialog />

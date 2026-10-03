@@ -1,18 +1,12 @@
 <script lang="ts">
 	import { cloud } from '#lib/stores/cloud.svelte.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
 
 	let open = $state(false);
-	let email = $state('');
-	let name = $state('');
 	let editingName = $state(false);
 	let nameDraft = $state('');
 
 	const statusText = { off: '', syncing: 'syncing…', synced: 'synced', error: 'sync error' };
-
-	async function submit(event: SubmitEvent) {
-		event.preventDefault();
-		if (email.trim()) await cloud.sendMagicLink(email, name);
-	}
 </script>
 
 <!-- Renders nothing until Supabase is configured in src/lib/config.ts. -->
@@ -38,12 +32,11 @@
 				type="button"
 				class="text-link hover:underline disabled:opacity-50"
 				disabled={cloud.busy}
-				onclick={() => (open = !open)}
-				aria-expanded={open}>{cloud.busy ? '…' : 'sign in'}</button
+				onclick={() => ui.openSignIn('signin')}>{cloud.busy ? '…' : 'sign in'}</button
 			>
 		{/if}
 
-		{#if open}
+		{#if open && cloud.user}
 			<div
 				class="absolute top-8 right-0 z-50 w-64 space-y-2 border border-line bg-bg p-3 shadow-lg"
 			>
@@ -88,40 +81,6 @@
 							cloud.signOut();
 						}}>sign out</button
 					>
-				{:else if cloud.linkSentTo}
-					<p>Check <span class="text-fg">{cloud.linkSentTo}</span> for a sign-in link.</p>
-					<p class="text-muted">Open it on any device to sign in there.</p>
-					<button type="button" class="link" onclick={() => (cloud.linkSentTo = null)}
-						>use another email</button
-					>
-				{:else}
-					<form onsubmit={submit} class="space-y-2">
-						<p class="label">sign in to sync across devices</p>
-						<label for="signin-name" class="sr-only">Your name (optional)</label>
-						<input
-							id="signin-name"
-							type="text"
-							autocomplete="name"
-							maxlength="60"
-							class="input"
-							placeholder="your name (optional)"
-							bind:value={name}
-						/>
-						<label for="signin-email" class="sr-only">Email</label>
-						<input
-							id="signin-email"
-							type="email"
-							required
-							autocomplete="email"
-							class="input"
-							placeholder="you@example.com"
-							bind:value={email}
-						/>
-						<button type="submit" class="btn-primary w-full" disabled={cloud.busy}>
-							{cloud.busy ? 'sending…' : 'email me a link'}
-						</button>
-						{#if cloud.error}<p class="text-danger">{cloud.error}</p>{/if}
-					</form>
 				{/if}
 			</div>
 		{/if}

@@ -17,7 +17,7 @@ import { isCloudConfigured, supabaseConfig } from '#lib/config.ts';
 import { defaultProgress, type ProgressMap, type TopicProgress } from '#lib/types/index.ts';
 import { mergeProgress, sameProgress } from '#lib/utils/merge.ts';
 import { sanitizeProgress } from '#lib/utils/validate.ts';
-import { readString, removeKey, writeString } from './storage.ts';
+import { STORAGE_KEYS, readString, removeKey, writeString } from './storage.ts';
 import { progress, type ProgressChange } from './progress.svelte.ts';
 
 export type SyncStatus = 'off' | 'syncing' | 'synced' | 'error';
@@ -135,8 +135,13 @@ class CloudStore {
 	}
 
 	/** Email a magic sign-in link. */
-	/** `name` is optional; it's stored on the new account (auth metadata → profiles.display_name). */
-	async sendMagicLink(email: string, name = '') {
+	/**
+	 * Email a magic sign-in link. The name is stored on a new account (auth metadata
+	 * → profiles.display_name) and also kept locally, so an existing account gets it
+	 * after the link is opened in this browser.
+	 */
+	async sendMagicLink(email: string, name: string) {
+		writeString(STORAGE_KEYS.pendingName, name.trim().slice(0, 60));
 		this.error = null;
 		this.busy = true;
 		try {
@@ -195,6 +200,12 @@ class CloudStore {
 			.maybeSingle()
 			.then(({ data }) => {
 				if (data?.display_name && this.user) this.user.name = data.display_name;
+				// A name typed at sign-in wins over the email-based default.
+				const pending = readString(STORAGE_KEYS.pendingName);
+				if (pending) {
+					removeKey(STORAGE_KEYS.pendingName);
+					if (pending !== data?.display_name) void this.updateName(pending);
+				}
 			});
 		this.status = 'syncing';
 		// Clean the magic-link tokens out of the address bar.

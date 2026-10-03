@@ -12,7 +12,10 @@ import { validateProgressMap } from '#lib/utils/validate.ts';
 export const STORAGE_KEYS = {
 	progress: 'knowledge-tracker:progress:v1',
 	theme: 'knowledge-tracker:theme',
-	expanded: 'knowledge-tracker:expanded-groups'
+	expanded: 'knowledge-tracker:expanded-groups',
+	welcomeDismissed: 'knowledge-tracker:welcome-dismissed',
+	nudgeSnoozedUntil: 'knowledge-tracker:signin-nudge-snoozed-until',
+	pendingName: 'knowledge-tracker:pending-name'
 } as const;
 
 function getStorage(): Storage | null {
