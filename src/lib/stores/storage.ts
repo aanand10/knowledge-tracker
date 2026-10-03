@@ -11,7 +11,8 @@ import { validateProgressMap } from '#lib/utils/validate.ts';
 
 export const STORAGE_KEYS = {
 	progress: 'knowledge-tracker:progress:v1',
-	theme: 'knowledge-tracker:theme'
+	theme: 'knowledge-tracker:theme',
+	expanded: 'knowledge-tracker:expanded-groups'
 } as const;
 
 function getStorage(): Storage | null {
@@ -84,4 +85,14 @@ export function saveProgress(progress: ProgressMap): boolean {
 
 export function clearProgress(): boolean {
 	return removeKey(STORAGE_KEYS.progress);
+}
+
+/** Which topic-list groups the user has expanded (everything else starts collapsed). */
+export function loadExpandedGroups(): string[] {
+	const data = readJSON(STORAGE_KEYS.expanded);
+	return Array.isArray(data) ? data.filter((x): x is string => typeof x === 'string') : [];
+}
+
+export function saveExpandedGroups(keys: string[]): boolean {
+	return writeJSON(STORAGE_KEYS.expanded, keys);
 }

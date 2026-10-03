@@ -2,14 +2,17 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { content } from '#lib/stores/content.svelte.ts';
+	import { loadExpandedGroups, saveExpandedGroups } from '#lib/stores/storage.ts';
 	import { progress } from '#lib/stores/progress.svelte.ts';
 	import {
 		filterTopics,
 		filtersFromParams,
 		filtersToParams,
 		groupTopics,
+		hasActiveFilters,
 		sortTopics,
 		uniqueAreas,
 		uniqueCategories,
@@ -42,18 +45,60 @@
 	const totals = $derived(countStatuses(content.topics, progress.map));
 	const today = todayISO();
 
-	// SvelteSet is a reactive Set: adding/removing keys re-renders whatever reads it.
-	const collapsed = new SvelteSet<string>();
-	const allCollapsed = $derived(groups.length > 0 && groups.every((g) => collapsed.has(g.key)));
+	// In "area" mode each group also has category sub-sections, which collapse on their own.
+	const sections = $derived(
+		groups.map((g) => ({
+			...g,
+			subs:
+				filters.group === 'area'
+					? groupTopics(g.topics, progress.map, 'category', { category: categories })
+					: []
+		}))
+	);
+	const subKey = (groupKey: string, sub: string) => `${groupKey}/${sub}`;
+	const allKeys = $derived(
+		sections.flatMap((g) => [g.key, ...g.subs.map((s) => subKey(g.key, s.key))])
+	);
 
-	function toggleGroup(key: string) {
-		if (collapsed.has(key)) collapsed.delete(key);
-		else collapsed.add(key);
+	// Everything starts collapsed. `expanded` remembers what you opened (saved in
+	// localStorage), so the layout survives opening a topic and coming back.
+	// SvelteSet is a reactive Set: adding/removing keys re-renders whatever reads it.
+	const expanded = new SvelteSet<string>(loadExpandedGroups());
+	$effect(() => {
+		// Spreading the set reads every key, so this effect re-runs on each change.
+		saveExpandedGroups([...expanded]);
+	});
+
+	// While searching or filtering, groups open automatically so matches are visible.
+	// Clicks during a search flip groups via this throwaway set instead.
+	const filtering = $derived(hasActiveFilters(filters));
+	const flipped = new SvelteSet<string>();
+	$effect(() => {
+		void page.url.search; // re-run whenever the filters (URL) change…
+		untrack(() => flipped.clear()); // …and reset the flips without depending on `flipped`
+	});
+
+	function isOpen(key: string): boolean {
+		return filtering ? !flipped.has(key) : expanded.has(key);
 	}
 
+	function toggle(key: string) {
+		const set = filtering ? flipped : expanded;
+		if (set.has(key)) set.delete(key);
+		else set.add(key);
+	}
+
+	const allOpen = $derived(allKeys.length > 0 && allKeys.every(isOpen));
+
 	function toggleAll() {
-		if (allCollapsed) collapsed.clear();
-		else for (const g of groups) collapsed.add(g.key);
+		if (filtering) {
+			if (allOpen) for (const k of allKeys) flipped.add(k);
+			else flipped.clear();
+		} else if (allOpen) {
+			for (const k of allKeys) expanded.delete(k);
+		} else {
+			for (const k of allKeys) expanded.add(k);
+		}
 	}
 
 	function applyFilters(next: TopicFilters) {
@@ -95,9 +140,9 @@
 			<p aria-live="polite">
 				showing <span class="text-fg">{visible.length}</span> of {content.topics.length}
 			</p>
-			{#if groups.length > 1}
+			{#if allKeys.length > 0}
 				<button type="button" class="hover:text-fg" onclick={toggleAll}>
-					{allCollapsed ? 'expand all' : 'collapse all'}
+					{allOpen ? '▾ collapse all' : '▸ expand all'}
 				</button>
 			{/if}
 		</div>
@@ -106,9 +151,9 @@
 			<StateMessage kind="empty" title="no topics match these filters" />
 		{:else}
 			<div class="space-y-3">
-				{#each groups as group (group.key)}
+				{#each sections as group (group.key)}
 					{@const counts = countStatuses(group.topics, progress.map)}
-					{@const open = !collapsed.has(group.key)}
+					{@const open = isOpen(group.key)}
 					{@const done = group.topics.length ? counts.confident / group.topics.length : 0}
 					{@const going = group.topics.length ? counts.learning / group.topics.length : 0}
 					<section class="box" aria-labelledby="grp-{slugify(group.key)}">
@@ -120,7 +165,7 @@
 									? 'border-b border-line'
 									: ''}"
 								aria-expanded={open}
-								onclick={() => toggleGroup(group.key)}
+								onclick={() => toggle(group.key)}
 							>
 								<span
 									class="text-muted transition-transform {open ? 'rotate-90' : ''}"
@@ -139,19 +184,43 @@
 						{#if open}
 							{#if filters.group === 'area'}
 								<!-- Inside an area, list each category as a small sub-heading. -->
-								{#each groupTopics( group.topics, progress.map, 'category', { category: categories } ) as sub (sub.key)}
-									<h3
-										class="border-b border-line px-3 pt-2.5 pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
-									>
-										{sub.label} <span class="font-normal">({sub.topics.length})</span>
+								{#each group.subs as sub (sub.key)}
+									{@const key = subKey(group.key, sub.key)}
+									{@const subOpen = isOpen(key)}
+									{@const subDone = countStatuses(sub.topics, progress.map).confident}
+									<h3>
+										<button
+											type="button"
+											class="flex w-full items-center gap-2 border-b border-line py-2 pr-3 pl-6 text-left text-xs hover:bg-panel"
+											aria-expanded={subOpen}
+											onclick={() => toggle(key)}
+										>
+											<span
+												class="text-muted transition-transform {subOpen ? 'rotate-90' : ''}"
+												aria-hidden="true">▸</span
+											>
+											<span class="flex-1 font-semibold tracking-wide text-muted uppercase"
+												>{sub.label}</span
+											>
+											<span class="text-muted tabular-nums">
+												<span class="text-ok">{subDone}</span>/{sub.topics.length}
+											</span>
+										</button>
 									</h3>
-									<ul class="divide-y divide-line border-b border-line last:border-b-0">
-										{#each sub.topics as topic (topic.id)}
-											<li>
-												<TopicCard {topic} progress={progress.get(topic.id)} {today} {hiddenTags} />
-											</li>
-										{/each}
-									</ul>
+									{#if subOpen}
+										<ul class="divide-y divide-line border-b border-line pl-3">
+											{#each sub.topics as topic (topic.id)}
+												<li>
+													<TopicCard
+														{topic}
+														progress={progress.get(topic.id)}
+														{today}
+														{hiddenTags}
+													/>
+												</li>
+											{/each}
+										</ul>
+									{/if}
 								{/each}
 							{:else}
 								<ul class="divide-y divide-line">

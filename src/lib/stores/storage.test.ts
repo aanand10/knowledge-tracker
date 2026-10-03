@@ -3,7 +3,9 @@ import { defaultProgress } from '#lib/types/index.ts';
 import {
 	STORAGE_KEYS,
 	clearProgress,
+	loadExpandedGroups,
 	loadProgress,
+	saveExpandedGroups,
 	readJSON,
 	readString,
 	saveProgress,
@@ -64,5 +66,15 @@ describe('storage', () => {
 		saveProgress({ a: defaultProgress() });
 		clearProgress();
 		expect(loadProgress()).toEqual({});
+	});
+});
+
+describe('expanded groups', () => {
+	it('round-trips and ignores junk', () => {
+		expect(loadExpandedGroups()).toEqual([]);
+		saveExpandedGroups(['Frameworks', 'Frameworks/React']);
+		expect(loadExpandedGroups()).toEqual(['Frameworks', 'Frameworks/React']);
+		localStorage.setItem(STORAGE_KEYS.expanded, JSON.stringify(['ok', 3, null]));
+		expect(loadExpandedGroups()).toEqual(['ok']);
 	});
 });
