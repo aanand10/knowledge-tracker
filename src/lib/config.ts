@@ -41,16 +41,15 @@ export const analyticsConfig = {
 };
 
 /**
- * Optional login + cloud sync with Firebase (free Spark plan).
- * Leave `apiKey` empty to keep the app local-only (nothing from Firebase is loaded).
- * These values are safe to commit: access is controlled by firestore.rules.
- * Setup steps are in the README ("Login and cloud sync").
+ * Optional login + cloud sync with Supabase (free plan).
+ * Leave `url` empty to keep the app local-only (the Supabase SDK is never loaded).
+ * The anon / publishable key is designed to be public: access is enforced by
+ * row level security (see supabase/schema.sql). Setup steps are in the README.
  */
-export const firebaseConfig = {
-	apiKey: '',
-	authDomain: '',
-	projectId: '',
-	appId: ''
+export const supabaseConfig = {
+	url: '',
+	anonKey: ''
 };
 
-export const isFirebaseConfigured = (): boolean => Boolean(firebaseConfig.apiKey.trim());
+export const isCloudConfigured = (): boolean =>
+	Boolean(supabaseConfig.url.trim() && supabaseConfig.anonKey.trim());

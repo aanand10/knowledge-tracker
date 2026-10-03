@@ -22,6 +22,12 @@ export interface ImportResult {
 
 const now = () => new Date().toISOString();
 
+/** What changed, so cloud sync can upload only the affected rows. */
+export type ProgressChange =
+	| { kind: 'topics'; ids: string[] }
+	| { kind: 'review'; id: string; rating: Rating }
+	| { kind: 'reset' };
+
 class ProgressStore {
 	// `$state` on a class field makes it reactive. Reading `this.map` inside a
 	// component, $derived or $effect subscribes to it automatically.
@@ -49,7 +55,7 @@ class ProgressStore {
 		// about. `$state` would also track deep mutations, but a single
 		// assignment is simpler to follow.
 		this.map = { ...this.map, [id]: { ...this.get(id), ...patch, updatedAt: now() } };
-		this.persist();
+		this.persist({ kind: 'topics', ids: [id] });
 	}
 
 	review(id: string, rating: Rating, today = todayISO()) {
@@ -57,7 +63,8 @@ class ProgressStore {
 			...this.map,
 			[id]: { ...scheduleReview(this.get(id), rating, today), updatedAt: now() }
 		};
-		this.persist();
+		this.persist({ kind: 'topics', ids: [id] });
+		this.notify({ kind: 'review', id, rating });
 	}
 
 	/** JSON string of all progress, wrapped with metadata for future-proofing. */
@@ -84,14 +91,14 @@ class ProgressStore {
 			return { ok: false, imported, warnings: warnings.length ? warnings : ['No progress found.'] };
 		}
 		this.map = { ...this.map, ...value };
-		this.persist();
+		this.persist({ kind: 'topics', ids: Object.keys(value) });
 		return { ok: true, imported, warnings };
 	}
 
 	reset() {
 		this.map = {};
 		this.saveFailed = !clearProgress() && browser;
-		this.notify();
+		this.notify({ kind: 'reset' });
 	}
 
 	/**
@@ -104,22 +111,22 @@ class ProgressStore {
 	}
 
 	/** Subscribe to local changes (used by cloud sync). Returns an unsubscribe function. */
-	onChange(listener: () => void): () => void {
+	onChange(listener: (change: ProgressChange) => void): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}
 
-	private listeners = new Set<() => void>();
+	private listeners = new Set<(change: ProgressChange) => void>();
 
-	private notify() {
-		for (const listener of this.listeners) listener();
+	private notify(change: ProgressChange) {
+		for (const listener of this.listeners) listener(change);
 	}
 
-	private persist() {
+	private persist(change: ProgressChange) {
 		// We save explicitly after each change instead of using $effect: an $effect
 		// at module level would need $effect.root and is harder to follow.
 		this.saveFailed = !saveProgress(this.map);
-		this.notify();
+		this.notify(change);
 	}
 }
 
