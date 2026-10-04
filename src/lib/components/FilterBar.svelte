@@ -207,7 +207,7 @@
 		{#if active}
 			<button
 				type="button"
-				class="ml-auto text-muted underline-offset-2 hover:text-fg hover:underline"
+				class="ml-auto whitespace-nowrap text-muted underline-offset-2 hover:text-fg hover:underline"
 				onclick={() => {
 					clearTimeout(searchTimer);
 					typed = null;
