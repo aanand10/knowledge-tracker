@@ -63,7 +63,9 @@
 <header class="sticky top-0 z-40 border-b border-line bg-bg">
 	<div class="mx-auto flex h-11 max-w-5xl items-center gap-3 px-4 sm:gap-4">
 		<a href={resolve('/')} class="mr-auto font-semibold whitespace-nowrap" aria-label="Recall home">
-			<span class="flex items-center gap-2"><Logo />Recall</span>
+			<span class="flex items-center gap-2"
+				><Logo /><span class="max-[400px]:sr-only">Recall</span></span
+			>
 		</a>
 		<nav aria-label="Main">
 			<ul class="flex gap-2.5 sm:gap-4">
