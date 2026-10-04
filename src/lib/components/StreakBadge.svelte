@@ -3,7 +3,6 @@
 	import { progress } from '#lib/stores/progress.svelte.ts';
 	import { reviewStreak } from '#lib/utils/stats.ts';
 	import { todayISO } from '#lib/utils/dates.ts';
-	import { plural } from '#lib/utils/labels.ts';
 
 	const today = todayISO();
 	// Same logic as the dashboard's "streak" stat, so the numbers always match.
@@ -14,8 +13,8 @@
 		streak === 0
 			? 'No streak yet. Mark a topic reviewed to start one.'
 			: doneToday
-				? `${plural(streak, 'day')} streak. You reviewed today, nice.`
-				: `${plural(streak, 'day')} streak. Review a topic today to keep it.`
+				? `${streak}-day streak. You reviewed today, nice.`
+				: `${streak}-day streak. Review a topic today to keep it.`
 	);
 </script>
 
