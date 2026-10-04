@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultProgress, type ProgressMap, type Topic } from '#lib/types/index.ts';
-import { countStatuses, dueTopics, reviewStreak, reviewsThisWeek } from './stats';
+import { countStatuses, dueTopics, reviewStreak, reviewsThisWeek, streakInfo } from './stats';
 
 const TODAY = '2026-03-10';
 const t = (id: string): Topic => ({
@@ -77,5 +77,14 @@ describe('reviewStreak', () => {
 			b: { ...defaultProgress(), history: ['2026-03-09'] }
 		};
 		expect(reviewStreak(progress, TODAY)).toBe(2);
+	});
+});
+
+describe('streakInfo', () => {
+	it('reports the streak and whether today is done', () => {
+		const p = (history: string[]): ProgressMap => ({ a: { ...defaultProgress(), history } });
+		expect(streakInfo(p(['2026-03-09', TODAY]), TODAY)).toEqual({ streak: 2, doneToday: true });
+		expect(streakInfo(p(['2026-03-09']), TODAY)).toEqual({ streak: 1, doneToday: false });
+		expect(streakInfo({}, TODAY)).toEqual({ streak: 0, doneToday: false });
 	});
 });

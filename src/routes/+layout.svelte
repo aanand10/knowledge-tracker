@@ -9,6 +9,8 @@
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import AccountButton from '#lib/components/AccountButton.svelte';
 	import StreakBadge from '#lib/components/StreakBadge.svelte';
+	import Logo from '#lib/components/Logo.svelte';
+	import { cloud } from '#lib/stores/cloud.svelte.ts';
 	import AuthDialog from '#lib/components/AuthDialog.svelte';
 	import SignInNudge from '#lib/components/SignInNudge.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
@@ -61,7 +63,7 @@
 <header class="sticky top-0 z-40 border-b border-line bg-bg">
 	<div class="mx-auto flex h-11 max-w-5xl items-center gap-3 px-4 sm:gap-4">
 		<a href={resolve('/')} class="mr-auto font-semibold whitespace-nowrap" aria-label="Recall home">
-			Recall
+			<span class="flex items-center gap-2"><Logo />Recall</span>
 		</a>
 		<nav aria-label="Main">
 			<ul class="flex gap-2.5 sm:gap-4">
@@ -82,7 +84,8 @@
 			</ul>
 		</nav>
 		<ThemeToggle />
-		<StreakBadge />
+		<!-- Signed-in users see the streak on their avatar instead. -->
+		{#if !cloud.user}<StreakBadge />{/if}
 		<AccountButton />
 	</div>
 </header>

@@ -62,3 +62,17 @@ export function reviewStreak(progress: ProgressMap, today: string): number {
 	}
 	return streak;
 }
+
+export interface StreakInfo {
+	/** Consecutive days with at least one review (see reviewStreak). */
+	streak: number;
+	/** True once something was reviewed today, i.e. the streak is safe. */
+	doneToday: boolean;
+}
+
+export function streakInfo(progress: ProgressMap, today: string): StreakInfo {
+	return {
+		streak: reviewStreak(progress, today),
+		doneToday: Object.values(progress).some((p) => p.history.includes(today))
+	};
+}

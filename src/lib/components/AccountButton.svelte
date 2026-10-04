@@ -2,6 +2,9 @@
 	import { resolve } from '$app/paths';
 	import { cloud } from '#lib/stores/cloud.svelte.ts';
 	import { ui } from '#lib/stores/ui.svelte.ts';
+	import { progress } from '#lib/stores/progress.svelte.ts';
+	import { streakInfo } from '#lib/utils/stats.ts';
+	import { todayISO } from '#lib/utils/dates.ts';
 
 	let open = $state(false);
 	let editingName = $state(false);
@@ -24,6 +27,16 @@
 			.map((w) => w.charAt(0).toUpperCase())
 			.join('')
 	);
+
+	// The day streak lives on the avatar to save header space.
+	const streak = $derived(streakInfo(progress.map, todayISO()));
+	const streakText = $derived(
+		streak.streak === 0
+			? 'no streak yet'
+			: `${streak.streak}-day streak${streak.doneToday ? ', reviewed today' : ', review today to keep it'}`
+	);
+	const FLAME =
+		'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z';
 
 	function close() {
 		open = false;
@@ -49,21 +62,35 @@
 		{#if cloud.user}
 			<button
 				type="button"
-				class="relative grid size-7 place-items-center rounded-full bg-panel text-[11px] font-semibold text-fg ring-1 ring-line hover:ring-muted"
+				class="relative grid size-7 place-items-center rounded-full bg-panel text-[11px] font-semibold text-fg ring-2 {streak.doneToday
+					? 'ring-warn'
+					: 'ring-line hover:ring-muted'}"
 				onclick={() => (open = !open)}
 				aria-expanded={open}
 				aria-haspopup="menu"
-				aria-label="Account: {cloud.user.name}, {status[cloud.status].text}"
-				title={status[cloud.status].text}
+				aria-label="Account: {cloud.user.name}, {streakText}, {status[cloud.status].text}"
+				title="{streakText} · {status[cloud.status].text}"
 			>
 				{initials}
-				<!-- Sync status dot on the avatar. -->
+				<!-- Sync status dot (top right). -->
 				<span
-					class="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-bg {status[
+					class="absolute -top-0.5 -right-0.5 size-2 rounded-full ring-2 ring-bg {status[
 						cloud.status
 					].dot} {cloud.status === 'syncing' ? 'animate-pulse' : ''}"
 					aria-hidden="true"
 				></span>
+				<!-- Streak pill hanging off the bottom of the avatar. -->
+				{#if streak.streak > 0}
+					<span
+						class="absolute -bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-px rounded-full bg-bg px-1 text-[9px] leading-3 tabular-nums ring-1 {streak.doneToday
+							? 'text-warn ring-warn'
+							: 'text-muted ring-line'}"
+						aria-hidden="true"
+					>
+						<svg class="size-2.5" viewBox="0 0 24 24" fill="currentColor"><path d={FLAME} /></svg
+						>{streak.streak}
+					</span>
+				{/if}
 			</button>
 		{:else}
 			<button
@@ -121,6 +148,16 @@
 					<p class="flex items-center gap-2 px-2 py-1.5 text-muted" aria-live="polite">
 						<span class="size-2 rounded-full {status[cloud.status].dot}" aria-hidden="true"></span>
 						{cloud.status === 'error' && cloud.error ? cloud.error : status[cloud.status].text}
+					</p>
+					<p
+						class="flex items-center gap-2 px-2 py-1.5 {streak.doneToday
+							? 'text-warn'
+							: 'text-muted'}"
+					>
+						<svg class="size-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
+							><path d={FLAME} /></svg
+						>
+						{streakText}
 					</p>
 					{#if !editingName}
 						<button
