@@ -8,6 +8,7 @@
 	import { theme } from '#lib/stores/theme.svelte.ts';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import AccountButton from '#lib/components/AccountButton.svelte';
+	import StreakBadge from '#lib/components/StreakBadge.svelte';
 	import AuthDialog from '#lib/components/AuthDialog.svelte';
 	import SignInNudge from '#lib/components/SignInNudge.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
@@ -81,6 +82,7 @@
 			</ul>
 		</nav>
 		<ThemeToggle />
+		<StreakBadge />
 		<AccountButton />
 	</div>
 </header>
