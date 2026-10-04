@@ -26,7 +26,7 @@
 	title={hint}
 	aria-label={hint}
 >
-	<!-- Flame: filled when today's review is done, outlined when the streak is at risk. -->
+	<!-- Flame icon (Lucide, ISC licence): filled when today's review is done, outlined when the streak is at risk. -->
 	<svg
 		class="size-4"
 		viewBox="0 0 24 24"
@@ -36,7 +36,9 @@
 		stroke-linejoin="round"
 		aria-hidden="true"
 	>
-		<path d="M12 2c1 3.5 5 5.5 5 10.5A5 5 0 0 1 7 12.5c0-2 1-3.5 2-4.5 0 2 1 3 2 3-.5-3 0-6 1-9Z" />
+		<path
+			d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"
+		/>
 	</svg>
 	<span>{streak}</span>
 </a>
