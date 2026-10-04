@@ -99,10 +99,16 @@
 </main>
 
 <footer
-	class="mx-auto flex max-w-5xl justify-between gap-3 border-t border-line px-4 py-3 text-xs text-muted"
+	class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line px-4 py-4 text-xs text-muted"
 >
-	<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">source</a>
-	<VisitorCount />
+	<span class="flex items-center gap-2">
+		<Logo size={16} />
+		<span><span class="text-fg">Recall</span> · remember it on interview day</span>
+	</span>
+	<span class="flex items-center gap-3">
+		<VisitorCount />
+		<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">GitHub</a>
+	</span>
 </footer>
 
 <AuthDialog />

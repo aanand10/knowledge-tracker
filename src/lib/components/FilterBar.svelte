@@ -153,8 +153,8 @@
 		{/if}
 	</div>
 
-	<!-- Toolbar: filter panel toggle, active-filter pills, sort. -->
-	<div class="flex flex-wrap items-center gap-2 text-xs">
+	<!-- Toolbar row: filters toggle + sort (always one line), clear on the right. -->
+	<div class="flex items-center gap-2 text-xs">
 		<button
 			type="button"
 			class="btn {panelOpen ? 'border-fg' : ''}"
@@ -175,34 +175,26 @@
 				>{/if}
 		</button>
 
-		{#each pills as pill (pill.key)}
-			<button
-				type="button"
-				class="inline-flex items-center gap-1 rounded-sm border border-line bg-panel px-2 py-1 hover:border-danger hover:text-danger"
-				aria-label="Remove filter {pill.label}"
-				onclick={() => update({ [pill.key]: '' } as Partial<TopicFilters>)}
+		<!-- Sort: looks like a button, but a native <select> sits invisibly on top, so
+		     phones show their own picker. text-base on the select stops iOS zooming in. -->
+		<label
+			class="relative btn cursor-pointer focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-link"
+		>
+			<svg
+				class="size-3.5"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4" /></svg
 			>
-				{pill.label} <span aria-hidden="true">×</span>
-			</button>
-		{/each}
-		{#if active}
-			<button
-				type="button"
-				class="text-muted underline-offset-2 hover:text-fg hover:underline"
-				onclick={() => {
-					clearTimeout(searchTimer);
-					typed = null;
-					onchange({ ...DEFAULT_FILTERS, sort: filters.sort, group: filters.group });
-				}}>clear all</button
-			>
-		{/if}
-
-		<div class="ml-auto flex items-center gap-1.5">
-			<span class="text-muted" aria-hidden="true">sort</span>
-			<label for="filter-sort" class="sr-only">Sort</label>
+			<span class="max-w-[9rem] truncate">{SORT_LABELS[filters.sort]}</span>
+			<span class="text-muted" aria-hidden="true">▾</span>
+			<span class="sr-only">Sort by</span>
 			<select
 				id="filter-sort"
-				class="input w-auto!"
+				class="absolute inset-0 cursor-pointer appearance-none text-base opacity-0"
 				value={filters.sort}
 				onchange={(e) => update({ sort: e.currentTarget.value as TopicFilters['sort'] })}
 			>
@@ -210,8 +202,36 @@
 					<option value={key}>{SORT_LABELS[key]}</option>
 				{/each}
 			</select>
-		</div>
+		</label>
+
+		{#if active}
+			<button
+				type="button"
+				class="ml-auto text-muted underline-offset-2 hover:text-fg hover:underline"
+				onclick={() => {
+					clearTimeout(searchTimer);
+					typed = null;
+					onchange({ ...DEFAULT_FILTERS, sort: filters.sort, group: filters.group });
+				}}>clear all</button
+			>
+		{/if}
 	</div>
+
+	{#if pills.length}
+		<!-- Active filters as removable pills. -->
+		<div class="flex flex-wrap gap-1.5 text-xs">
+			{#each pills as pill (pill.key)}
+				<button
+					type="button"
+					class="inline-flex items-center gap-1 rounded-sm border border-line bg-panel px-2 py-1 hover:border-danger hover:text-danger"
+					aria-label="Remove filter {pill.label}"
+					onclick={() => update({ [pill.key]: '' } as Partial<TopicFilters>)}
+				>
+					{pill.label} <span aria-hidden="true">×</span>
+				</button>
+			{/each}
+		</div>
+	{/if}
 
 	{#if panelOpen}
 		<div id="filter-panel" class="space-y-3 border border-line p-3">
