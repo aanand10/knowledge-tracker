@@ -130,7 +130,7 @@ create table if not exists public.feedback (
   id bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
   user_id uuid default auth.uid() references auth.users (id) on delete set null,
-  kind text not null default 'idea' check (kind in ('idea', 'bug', 'content', 'other')),
+  kind text not null default 'idea' check (kind in ('idea', 'bug', 'content', 'topic', 'other')),
   message text not null check (char_length(message) between 3 and 2000),
   name text check (char_length(name) <= 80),
   email text check (char_length(email) <= 200),

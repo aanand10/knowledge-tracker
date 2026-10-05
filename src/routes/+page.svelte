@@ -23,6 +23,7 @@
 	import { greeting } from '#lib/utils/greeting.ts';
 	import { plural } from '#lib/utils/labels.ts';
 	import { cloud } from '#lib/stores/cloud.svelte.ts';
+	import { ui } from '#lib/stores/ui.svelte.ts';
 	import { todayISO } from '#lib/utils/dates.ts';
 	import { slugify } from '#lib/utils/slug.ts';
 	import ContentGate from '#lib/components/ContentGate.svelte';
@@ -133,9 +134,14 @@
 					{totals['not-started']} to start
 				</p>
 			</div>
-			<a class="text-xs link" href={resolve('/dashboard')}>
-				{dueCount ? `${plural(dueCount, 'topic')} due today →` : 'due for review →'}
-			</a>
+			<div class="flex flex-col items-end gap-1">
+				<button type="button" class="btn" onclick={() => ui.openFeedback('topic')}>
+					+ suggest a topic
+				</button>
+				<a class="text-xs link" href={resolve('/dashboard')}>
+					{dueCount ? `${plural(dueCount, 'topic')} due today →` : 'due for review →'}
+				</a>
+			</div>
 		</header>
 
 		<FilterBar
@@ -160,7 +166,19 @@
 		</div>
 
 		{#if visible.length === 0}
-			<StateMessage kind="empty" title="no topics match these filters" />
+			<StateMessage kind="empty" title="no topics match these filters">
+				{#if filters.q.trim()}
+					<p>
+						Missing something?
+						<button
+							type="button"
+							class="link"
+							onclick={() => ui.openFeedback('topic', filters.q.trim())}
+							>Suggest "{filters.q.trim()}" as a topic</button
+						>
+					</p>
+				{/if}
+			</StateMessage>
 		{:else}
 			<div class="space-y-3">
 				{#each sections as group (group.key)}

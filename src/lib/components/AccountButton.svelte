@@ -182,7 +182,7 @@
 						class="block w-full px-2 py-1.5 text-left hover:bg-panel"
 						onclick={() => {
 							close();
-							ui.feedbackOpen = true;
+							ui.openFeedback();
 						}}>send feedback</button
 					>
 				</div>

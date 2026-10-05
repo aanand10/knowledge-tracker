@@ -109,7 +109,7 @@
 	</span>
 	<span class="flex items-center gap-3">
 		<VisitorCount />
-		<button type="button" class="text-link hover:underline" onclick={() => (ui.feedbackOpen = true)}
+		<button type="button" class="text-link hover:underline" onclick={() => ui.openFeedback()}
 			>feedback</button
 		>
 		<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">GitHub</a>
