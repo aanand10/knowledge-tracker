@@ -53,3 +53,12 @@ export const supabaseConfig = {
 
 export const isCloudConfigured = (): boolean =>
 	Boolean(supabaseConfig.url.trim() && supabaseConfig.anonKey.trim());
+
+/**
+ * Feedback emails via Web3Forms (https://web3forms.com, free ~250/month).
+ * Get an access key by entering your email on their site; it's designed to be public.
+ * Leave empty to only store feedback in Supabase (Table Editor → feedback).
+ */
+export const feedbackConfig = {
+	web3formsKey: ''
+};

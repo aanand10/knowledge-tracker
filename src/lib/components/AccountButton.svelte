@@ -176,6 +176,15 @@
 						href={resolve('/settings')}
 						onclick={close}>settings &amp; backup</a
 					>
+					<button
+						type="button"
+						role="menuitem"
+						class="block w-full px-2 py-1.5 text-left hover:bg-panel"
+						onclick={() => {
+							close();
+							ui.feedbackOpen = true;
+						}}>send feedback</button
+					>
 				</div>
 				<div class="border-t border-line p-1.5">
 					<button

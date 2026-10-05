@@ -12,6 +12,8 @@
 	import Logo from '#lib/components/Logo.svelte';
 	import { cloud } from '#lib/stores/cloud.svelte.ts';
 	import AuthDialog from '#lib/components/AuthDialog.svelte';
+	import FeedbackDialog from '#lib/components/FeedbackDialog.svelte';
+	import { ui } from '#lib/stores/ui.svelte.ts';
 	import SignInNudge from '#lib/components/SignInNudge.svelte';
 	import ContentWarnings from '#lib/components/ContentWarnings.svelte';
 	import VisitorCount from '#lib/components/VisitorCount.svelte';
@@ -107,8 +109,12 @@
 	</span>
 	<span class="flex items-center gap-3">
 		<VisitorCount />
+		<button type="button" class="text-link hover:underline" onclick={() => (ui.feedbackOpen = true)}
+			>feedback</button
+		>
 		<a class="hover:text-fg" href="https://github.com/aanand10/knowledge-tracker">GitHub</a>
 	</span>
 </footer>
 
 <AuthDialog />
+<FeedbackDialog />

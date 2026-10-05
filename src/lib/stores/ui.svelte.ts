@@ -3,6 +3,7 @@ export type AuthDialogMode = 'welcome' | 'signin';
 
 class UiStore {
 	authDialog = $state<AuthDialogMode | null>(null);
+	feedbackOpen = $state(false);
 
 	openSignIn(mode: AuthDialogMode = 'signin') {
 		this.authDialog = mode;

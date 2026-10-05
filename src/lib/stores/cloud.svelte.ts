@@ -13,7 +13,7 @@
 import { browser } from '$app/env';
 import { resolve } from '$app/paths';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { isCloudConfigured, supabaseConfig } from '#lib/config.ts';
+import { feedbackConfig, isCloudConfigured, supabaseConfig } from '#lib/config.ts';
 import { defaultProgress, type ProgressMap, type TopicProgress } from '#lib/types/index.ts';
 import { mergeProgress, sameProgress } from '#lib/utils/merge.ts';
 import { personalName } from '#lib/utils/greeting.ts';
@@ -187,6 +187,52 @@ class CloudStore {
 		} finally {
 			this.busy = false;
 		}
+	}
+
+	/**
+	 * Save feedback to Supabase (write-only table) and, if configured, email it to
+	 * the owner through Web3Forms. Succeeds if at least one of the two worked.
+	 */
+	async sendFeedback(input: {
+		kind: string;
+		message: string;
+		name: string;
+		email: string;
+		page: string;
+	}): Promise<boolean> {
+		const row = {
+			kind: input.kind,
+			message: input.message.trim().slice(0, 2000),
+			name: input.name.trim().slice(0, 80) || null,
+			email: input.email.trim().slice(0, 200) || null,
+			page: input.page.slice(0, 200)
+		};
+		const results = await Promise.allSettled([
+			this.enabled
+				? this.sdk().then(async (sb) => {
+						const { error } = await sb.from('feedback').insert(row);
+						if (error) throw error;
+					})
+				: Promise.reject(new Error('cloud off')),
+			feedbackConfig.web3formsKey
+				? fetch('https://api.web3forms.com/submit', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+						body: JSON.stringify({
+							access_key: feedbackConfig.web3formsKey,
+							subject: `Recall feedback: ${row.kind}`,
+							from_name: 'Recall feedback',
+							replyto: row.email ?? undefined,
+							name: row.name ?? 'anonymous',
+							email: row.email ?? '',
+							message: `${row.message}\n\nType: ${row.kind}\nPage: ${row.page}`
+						})
+					}).then((r) => {
+						if (!r.ok) throw new Error(`email failed (${r.status})`);
+					})
+				: Promise.reject(new Error('email off'))
+		]);
+		return results.some((r) => r.status === 'fulfilled');
 	}
 
 	/** Change the display name (shown in the menu and, later, on the leaderboard). */
