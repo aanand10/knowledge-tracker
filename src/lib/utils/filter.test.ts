@@ -187,6 +187,21 @@ describe('notes filter and search extras', () => {
 		]);
 	});
 
+	it('matches every word of a multi-word query, in any order', () => {
+		const search = (q: string) => ids(filterTopics(topics, progress, { ...DEFAULT_FILTERS, q }));
+		expect(search('loop event')).toEqual(['event-loop']);
+		expect(search('  event   loop ')).toEqual(['event-loop']);
+		expect(search('react #fundamentals')).toEqual(['hooks']);
+		expect(search('event closures')).toEqual([]);
+	});
+
+	it('matches the area name', () => {
+		expect(ids(filterTopics(topics, progress, { ...DEFAULT_FILTERS, q: 'frameworks' }))).toEqual([
+			'keys',
+			'hooks'
+		]);
+	});
+
 	it('round-trips group and notes through the URL', () => {
 		const f = { ...DEFAULT_FILTERS, notes: 'yes' as const, group: 'round' as const };
 		expect(filtersFromParams(filtersToParams(f))).toEqual(f);

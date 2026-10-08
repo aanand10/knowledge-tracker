@@ -96,7 +96,12 @@ export function filterTopics(
 	progress: ProgressMap,
 	filters: TopicFilters
 ): Topic[] {
-	const query = filters.q.trim().toLowerCase().replace(/^#/, '');
+	// Every word must match somewhere, in any order: "loop event" finds "Event loop".
+	const words = filters.q
+		.toLowerCase()
+		.split(/\s+/)
+		.map((word) => word.replace(/^#/, ''))
+		.filter(Boolean);
 	return topics.filter((topic) => {
 		if (filters.area && topic.area !== filters.area) return false;
 		if (filters.category && topic.category !== filters.category) return false;
@@ -105,9 +110,11 @@ export function filterTopics(
 		if (filters.notes === 'yes' && topic.note === null) return false;
 		if (filters.notes === 'no' && topic.note !== null) return false;
 		if (filters.status && progressFor(progress, topic.id).status !== filters.status) return false;
-		if (query) {
-			const haystack = [topic.title, topic.category, ...topic.tags].join(' ').toLowerCase();
-			if (!haystack.includes(query)) return false;
+		if (words.length) {
+			const haystack = [topic.title, topic.category, topic.area, ...topic.tags]
+				.join(' ')
+				.toLowerCase();
+			if (!words.every((word) => haystack.includes(word))) return false;
 		}
 		return true;
 	});
