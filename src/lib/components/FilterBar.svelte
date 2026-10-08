@@ -10,6 +10,7 @@
 		type TopicFilters
 	} from '#lib/utils/filter.ts';
 	import { progressFor } from '#lib/utils/progress.ts';
+	import { untrack } from 'svelte';
 	import Chip from './Chip.svelte';
 
 	interface Props {
@@ -59,15 +60,26 @@
 	// Debounce typing so we don't rewrite the URL on every keystroke.
 	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 	let searchInput = $state<HTMLInputElement>();
-	let typed = $state<string | null>(null); // what's in the box before the debounce fires
+	// Exactly what's in the box. The URL stores a trimmed copy, so showing the URL value
+	// would eat a space typed before the debounce fired ("event " → "event").
+	let typed = $state<string | null>(null);
+
+	// Only let the URL overwrite the box when it changed from elsewhere
+	// (clear all, back button), not when it's just catching up with our own typing.
+	$effect(() => {
+		const q = filters.q;
+		untrack(() => {
+			if (typed !== null && typed.trim() !== q.trim()) {
+				clearTimeout(searchTimer);
+				typed = null;
+			}
+		});
+	});
 
 	function onSearchInput(value: string) {
 		typed = value;
 		clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => {
-			typed = null;
-			update({ q: value });
-		}, 200);
+		searchTimer = setTimeout(() => update({ q: value }), 200);
 	}
 
 	function clearSearch() {
